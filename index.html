@@ -1,0 +1,2266 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Combat Simulator — Multiverso</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B0E14;
+    --panel:#12161F;
+    --panel2:#1B222C;
+    --paper:#E8E6DE;
+    --muted:#8A93A3;
+    --amber:#FFB020;
+    --teamA:#3E7CB1;
+    --teamB:#C1443C;
+    --hero:#4FB286;
+    --villain:#B5495B;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--ink);
+    color:var(--paper);
+    font-family:'IBM Plex Mono', monospace;
+    line-height:1.5;
+    padding-bottom:60px;
+  }
+  .hazard{
+    height:10px;
+    background:repeating-linear-gradient(135deg, var(--amber) 0 16px, var(--ink) 16px 32px);
+  }
+  header{
+    padding:36px 20px 22px;
+    text-align:center;
+    border-bottom:1px solid #232B37;
+  }
+  h1{
+    font-family:'Bebas Neue', sans-serif;
+    font-size:clamp(38px,8vw,64px);
+    letter-spacing:3px;
+    margin:0;
+    color:var(--paper);
+  }
+  h1 span{color:var(--amber);}
+  .tagline{
+    color:var(--muted);
+    font-size:13px;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    margin-top:6px;
+  }
+  main{max-width:1100px;margin:0 auto;padding:0 16px;}
+  section{margin-top:34px;}
+  .section-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:14px;
+    flex-wrap:wrap;
+  }
+  .section-title{
+    font-family:'Bebas Neue', sans-serif;
+    font-size:24px;
+    letter-spacing:2px;
+    color:var(--paper);
+  }
+  .section-title small{
+    display:block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:1px;
+    color:var(--muted);
+    text-transform:uppercase;
+    margin-top:2px;
+  }
+
+  .universe-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));
+    gap:10px;
+  }
+  .universe-btn{
+    background:var(--panel2);
+    border:2px solid #2B3542;
+    color:var(--muted);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:1px;
+    padding:16px 12px;
+    border-radius:4px;
+    cursor:pointer;
+    text-align:center;
+    transition:border-color .15s, color .15s, background .15s;
+  }
+  .universe-btn:hover{border-color:var(--amber);color:var(--paper);}
+  .universe-btn.active{
+    border-color:var(--amber);
+    background:rgba(255,176,32,0.12);
+    color:var(--amber);
+  }
+  .universe-btn .u-icon{font-size:28px;display:block;margin-bottom:6px;}
+  .universe-btn .u-name{
+    font-family:'Bebas Neue', sans-serif;
+    font-size:18px;
+    letter-spacing:1.5px;
+    color:inherit;
+  }
+  .universe-btn .u-count{font-size:10px;margin-top:4px;opacity:0.7;}
+  .uni-tag{font-size:9px;color:var(--muted);letter-spacing:0.5px;text-transform:uppercase;}
+
+  .filters{display:flex;gap:8px;flex-wrap:wrap;}
+  .filter-btn{
+    background:transparent;
+    border:1px solid #2B3542;
+    color:var(--muted);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:1px;
+    padding:7px 12px;
+    border-radius:3px;
+    cursor:pointer;
+  }
+  .filter-btn.active{
+    color:var(--ink);
+    background:var(--amber);
+    border-color:var(--amber);
+  }
+  .roster-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(168px,1fr));
+    gap:10px;
+  }
+  .card{
+    background:var(--panel2);
+    border-radius:4px;
+    padding:12px 12px 10px;
+    border-left:4px solid var(--hero);
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .card.villain{border-left-color:var(--villain);}
+  .card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;}
+  .name-wrap{display:flex;align-items:center;gap:8px;}
+  .icon-badge{
+    width:30px;height:30px;
+    min-width:30px;
+    border-radius:50%;
+    background:#0E1218;
+    border:1px solid #2B3542;
+    display:flex;align-items:center;justify-content:center;
+    font-size:15px;
+  }
+  .card-name{
+    font-family:'Bebas Neue', sans-serif;
+    font-size:19px;
+    letter-spacing:1px;
+    line-height:1.1;
+  }
+  .ability-line{
+    font-size:10.5px;
+    color:var(--muted);
+    letter-spacing:0.3px;
+  }
+  .chip{
+    font-size:9px;
+    letter-spacing:1px;
+    padding:3px 6px;
+    border-radius:2px;
+    text-transform:uppercase;
+    white-space:nowrap;
+    color:var(--ink);
+    background:var(--hero);
+    font-weight:600;
+  }
+  .card.villain .chip{background:var(--villain);color:var(--paper);}
+  .stat-line{
+    font-size:11.5px;
+    letter-spacing:0.5px;
+    color:var(--amber);
+    font-weight:600;
+  }
+  .blurb{font-size:11px;color:var(--muted);min-height:28px;}
+  .card-actions{display:flex;gap:6px;}
+  .add-btn{
+    flex:1;
+    border:1px solid;
+    background:transparent;
+    padding:6px 4px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:0.5px;
+    border-radius:3px;
+    cursor:pointer;
+    font-weight:600;
+  }
+  .add-btn.a{border-color:var(--teamA);color:var(--teamA);}
+  .add-btn.a:hover{background:var(--teamA);color:var(--ink);}
+  .add-btn.b{border-color:var(--teamB);color:var(--teamB);}
+  .add-btn.b:hover{background:var(--teamB);color:var(--ink);}
+  .assigned-btn{
+    width:100%;
+    border:none;
+    padding:7px 4px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:0.5px;
+    border-radius:3px;
+    cursor:pointer;
+    font-weight:700;
+    color:var(--ink);
+  }
+  .teams-wrap{
+    display:flex;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+  .team-panel{
+    flex:1;
+    min-width:260px;
+    background:var(--panel);
+    border-top:3px solid var(--teamA);
+    border-radius:4px;
+    padding:14px 16px 16px;
+  }
+  .team-panel.b{border-top-color:var(--teamB);}
+  .team-panel h3{
+    font-family:'Bebas Neue', sans-serif;
+    font-size:20px;
+    letter-spacing:1.5px;
+    margin:0 0 10px;
+    color:var(--teamA);
+  }
+  .team-panel.b h3{color:var(--teamB);}
+  .team-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;min-height:20px;}
+  .team-list li{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:var(--panel2);
+    padding:7px 10px;
+    border-radius:3px;
+    font-size:12px;
+  }
+  .team-list .rm{
+    background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;
+  }
+  .team-list .rm:hover{color:var(--paper);}
+  .empty-note{color:var(--muted);font-size:11.5px;font-style:italic;}
+  .power-total{
+    margin-top:10px;
+    padding-top:10px;
+    border-top:1px dashed #2B3542;
+    font-size:11.5px;
+    color:var(--muted);
+    display:flex;
+    justify-content:space-between;
+  }
+  .power-total b{color:var(--paper);}
+  .cta-wrap{text-align:center;margin-top:26px;}
+  #fightBtn{
+    background:var(--amber);
+    color:var(--ink);
+    border:none;
+    font-family:'Bebas Neue', sans-serif;
+    font-size:22px;
+    letter-spacing:2px;
+    padding:14px 46px;
+    border-radius:3px;
+    cursor:pointer;
+  }
+  #fightBtn:disabled{background:#3A4250;color:#6B7280;cursor:not-allowed;}
+  #fightBtn:not(:disabled):hover{background:#FFC24D;}
+  #fightBtn:focus-visible, .add-btn:focus-visible, .assigned-btn:focus-visible, .filter-btn:focus-visible{
+    outline:2px solid var(--amber);outline-offset:2px;
+  }
+  .hint{font-size:11px;color:var(--muted);margin-top:8px;}
+  #results{display:none;}
+  .log-box{
+    background:#0E1218;
+    border:1px solid #232B37;
+    border-radius:4px;
+    padding:18px 20px;
+    max-height:640px;
+    overflow-y:auto;
+    font-size:13.5px;
+    line-height:1.7;
+  }
+  .log-line{
+    padding:8px 0;
+    border-bottom:1px solid #1C222D;
+    opacity:0;
+    transform:translateY(4px);
+    animation:reveal 0.4s ease forwards;
+  }
+  .log-line:last-child{border-bottom:none;}
+  .log-line.scene{
+    color:var(--amber);
+    font-style:italic;
+    letter-spacing:0.5px;
+    border-bottom:none;
+    padding-bottom:6px;
+    margin-top:12px;
+    margin-bottom:2px;
+  }
+  .log-line.scene:first-child{margin-top:0;}
+  .log-line.a{color:var(--teamA);}
+  .log-line.b{color:var(--teamB);}
+  .log-line.ko{color:var(--amber);font-weight:700;}
+  .log-line.narr{color:var(--paper);}
+
+  @keyframes reveal{to{opacity:1;transform:translateY(0);}}
+  @media (prefers-reduced-motion:reduce){
+    .log-line{animation:none;opacity:1;transform:none;}
+  }
+  .winner-banner{
+    margin-top:16px;
+    padding:20px;
+    text-align:center;
+    border-radius:4px;
+    position:relative;
+    overflow:hidden;
+  }
+  .winner-banner::before{
+    content:"";
+    position:absolute;inset:0;
+    background:repeating-linear-gradient(135deg, var(--amber) 0 14px, transparent 14px 28px);
+    opacity:0.15;
+  }
+  .winner-banner h2{
+    font-family:'Bebas Neue', sans-serif;
+    font-size:clamp(26px,5vw,40px);
+    letter-spacing:2px;
+    margin:0;
+    position:relative;
+  }
+  .winner-banner.a{background:rgba(62,124,177,0.18);}
+  .winner-banner.b{background:rgba(193,68,60,0.18);}
+  .reset-wrap{text-align:center;margin-top:16px;}
+  #resetBtn{
+    background:transparent;
+    border:1px solid #2B3542;
+    color:var(--muted);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:1px;
+    padding:9px 18px;
+    border-radius:3px;
+    cursor:pointer;
+  }
+  #resetBtn:hover{color:var(--paper);border-color:var(--paper);}
+
+  .synergy-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+  .syn-badge{
+    font-size:10px;letter-spacing:0.5px;
+    padding:4px 8px;border-radius:3px;
+    background:rgba(255,176,32,0.15);
+    border:1px solid var(--amber);
+    color:var(--amber);font-weight:600;
+  }
+  .syn-badge.partial{opacity:0.75;border-style:dashed;}
+  .syn-badge.full{background:rgba(255,176,32,0.28);}
+  .synergy-power{font-size:11px;color:var(--amber);margin-top:6px;}
+  .archive-grid{display:grid;gap:10px;}
+  .archive-card{
+    background:var(--panel2);border-radius:4px;padding:12px 14px;
+    border-left:3px solid #2B3542;
+  }
+  .arc-date{font-size:10px;color:var(--muted);letter-spacing:0.5px;margin-bottom:6px;}
+  .arc-teams{font-size:11.5px;color:var(--paper);margin:2px 0;}
+  .arc-winner{display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--muted);}
+  .arc-winner .win-a{color:var(--teamA);}
+  .arc-winner .win-b{color:var(--teamB);}
+  .arc-winner .win-draw{color:var(--amber);}
+  #clearArchiveBtn{
+    background:transparent;border:1px solid #2B3542;color:var(--muted);
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1px;
+    padding:7px 14px;border-radius:3px;cursor:pointer;margin-top:10px;
+  }
+  #clearArchiveBtn:hover{color:var(--paper);border-color:var(--paper);}
+
+
+  .synergy-guide{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+    gap:10px;
+  }
+  .syn-card{
+    background:var(--panel2);
+    border-radius:4px;
+    padding:12px 14px;
+    border-left:3px solid var(--amber);
+  }
+  .syn-card h4{
+    font-family:'Bebas Neue',sans-serif;
+    font-size:16px;
+    letter-spacing:1px;
+    margin:0 0 6px;
+    color:var(--amber);
+  }
+  .syn-card .syn-members{font-size:11px;color:var(--muted);line-height:1.5;}
+  .syn-card .syn-rule{font-size:10px;color:var(--paper);margin-top:8px;opacity:0.85;}
+  .archive-empty{color:var(--muted);font-size:12px;font-style:italic;padding:8px 0;}
+
+
+  .synergy-toggle{
+    width:100%;
+    background:var(--panel2);
+    border:1px solid #2B3542;
+    color:var(--amber);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    letter-spacing:1px;
+    padding:12px 16px;
+    border-radius:4px;
+    cursor:pointer;
+    text-align:left;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .synergy-toggle:hover{border-color:var(--amber);}
+  .synergy-toggle .chev{transition:transform .2s;}
+  .synergy-toggle.open .chev{transform:rotate(180deg);}
+  #synergyGuide{display:none;margin-top:12px;}
+  #synergyGuide.open{display:grid;}
+
+
+  .mode-bar{display:flex;gap:8px;justify-content:center;padding:16px 0 0;flex-wrap:wrap;}
+  .mode-btn{
+    background:var(--panel2);border:2px solid #2B3542;color:var(--muted);
+    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:1px;
+    padding:10px 18px;border-radius:4px;cursor:pointer;
+  }
+  .mode-btn.active{border-color:var(--amber);color:var(--amber);background:rgba(255,176,32,0.12);}
+  .vs-panel{background:var(--panel);border:1px solid #232B37;border-radius:4px;padding:16px;margin-top:12px;}
+  .vs-row{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0;align-items:center;}
+  .vs-label{font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;width:100%;}
+  .size-btn,.role-chip{
+    background:transparent;border:1px solid #2B3542;color:var(--muted);
+    font-family:'IBM Plex Mono',monospace;font-size:12px;padding:8px 12px;border-radius:3px;cursor:pointer;
+  }
+  .size-btn.active,.role-chip.active{border-color:var(--amber);color:var(--amber);}
+  .budget-btn{
+    background:transparent;border:1px solid #2B3542;color:var(--muted);
+    font-family:'IBM Plex Mono',monospace;font-size:12px;padding:8px 12px;border-radius:3px;cursor:pointer;
+  }
+  .budget-btn.active{border-color:var(--amber);color:var(--amber);}
+  .code-box{
+    font-family:'IBM Plex Mono',monospace;font-size:13px;background:#0E1218;
+    border:1px solid #2B3542;color:var(--amber);padding:10px 12px;border-radius:3px;
+    word-break:break-all;width:100%;
+  }
+  .vs-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+  .vs-actions button{
+    background:var(--panel2);border:1px solid #2B3542;color:var(--paper);
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.5px;
+    padding:9px 14px;border-radius:3px;cursor:pointer;
+  }
+  .vs-actions button.primary{background:var(--amber);color:var(--ink);border-color:var(--amber);font-weight:700;}
+  .vs-actions button:disabled{opacity:0.4;cursor:not-allowed;}
+  .vs-status{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5;}
+  .vs-status strong{color:var(--amber);}
+  .draft-pool{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-top:12px;}
+  .draft-card{
+    background:var(--panel2);border:1px solid #2B3542;border-radius:3px;padding:8px;
+    font-size:11px;cursor:pointer;text-align:center;
+  }
+  .draft-card:hover{border-color:var(--amber);}
+  .draft-card.banned{opacity:0.35;pointer-events:none;text-decoration:line-through;}
+  .draft-card.taken{opacity:0.45;pointer-events:none;}
+  .draft-card .dn{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;}
+  .side-lists{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;}
+  .side-box{flex:1;min-width:140px;background:#0E1218;border-radius:3px;padding:10px;border-top:2px solid var(--teamA);}
+  .side-box.b{border-top-color:var(--teamB);}
+  .side-box h4{margin:0 0 6px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:16px;}
+  .side-box ul{margin:0;padding:0;list-style:none;font-size:12px;}
+  .side-box li{padding:3px 0;color:var(--paper);}
+  #freePlaySections.hidden,#vsSection.hidden{display:none;}
+
+  @media (max-width:700px){
+    .teams-wrap{flex-direction:column;}
+  }
+</style>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+</head>
+<body>
+
+<header>
+  <h1>COMBAT <span>SIMULATOR</span></h1>
+  <div class="tagline">Scegli un universo · componi le squadre · racconta lo scontro</div>
+</header>
+<div class="hazard"></div>
+
+<div class="mode-bar">
+  <button type="button" class="mode-btn active" data-mode="free" id="modeFree">COMBATTIMENTO LIBERO</button>
+  <button type="button" class="mode-btn" data-mode="vs" id="modeVs">SFIDA 2 GIOCATORI</button>
+</div>
+
+<main>
+
+
+  <section>
+    <div class="section-head">
+      <div class="section-title">Universo<small>ogni mondo ha personaggi e scenari propri</small></div>
+    </div>
+    <div class="universe-grid" id="universeGrid"></div>
+  </section>
+
+
+  <section>
+    <div class="section-head">
+      <div class="section-title">Sinergie</div>
+    </div>
+    <button type="button" class="synergy-toggle" id="synergyToggle" aria-expanded="false">
+      <span>Mostra elenco sinergie</span>
+      <span class="chev">▼</span>
+    </button>
+    <div class="synergy-guide" id="synergyGuide"></div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <div class="section-title">Roster<small id="rosterCount">—</small></div>
+      <div class="filters" id="filterBar">
+        <button class="filter-btn active" data-filter="all">TUTTI</button>
+        <button class="filter-btn" data-filter="heroes" id="filterHeroes">EROI</button>
+        <button class="filter-btn" data-filter="villain" id="filterVillain">VILLAIN</button>
+      </div>
+    </div>
+    <div class="roster-grid" id="rosterGrid"></div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <div class="section-title">Squadre<small>dimensioni libere, anche diverse tra loro</small></div>
+    </div>
+    <div class="teams-wrap">
+      <div class="team-panel a">
+        <h3>Squadra A</h3>
+        <ul class="team-list" id="teamAList"></ul>
+        <div class="power-total"><span>Potenza totale</span><b id="teamAPower">0</b></div>
+        <div class="synergy-power" id="teamASynergyPower" style="display:none"></div>
+        <div class="synergy-badges" id="teamASynergies"></div>
+      </div>
+      <div class="team-panel b">
+        <h3>Squadra B</h3>
+        <ul class="team-list" id="teamBList"></ul>
+        <div class="power-total"><span>Potenza totale</span><b id="teamBPower">0</b></div>
+        <div class="synergy-power" id="teamBSynergyPower" style="display:none"></div>
+        <div class="synergy-badges" id="teamBSynergies"></div>
+      </div>
+    </div>
+    <div class="cta-wrap">
+      <button id="fightBtn" disabled>AVVIA COMBATTIMENTO</button>
+      <div class="hint" id="fightHint">Aggiungi almeno un personaggio a ciascuna squadra</div>
+    </div>
+  </section>
+
+  <section id="results">
+    <div class="section-head">
+      <div class="section-title">Trasmissione<small>riassunto dello scontro</small></div>
+    </div>
+    <div class="log-box" id="logBox" aria-live="polite"></div>
+    <div id="winnerBanner"></div>
+    <div class="reset-wrap"><button id="resetBtn">Nuovo combattimento</button></div>
+  </section>
+
+
+  <section id="vsSection" class="hidden">
+    <div class="section-head">
+      <div class="section-title">Sfida 2 giocatori<small>ban → draft → scontro · due telefoni con codice</small></div>
+    </div>
+    <div class="vs-panel" id="vsPanel">
+      <div class="vs-row">
+        <div class="vs-label">Formato</div>
+        <button type="button" class="size-btn active" data-size="1">1v1</button>
+        <button type="button" class="size-btn" data-size="2">2v2</button>
+        <button type="button" class="size-btn" data-size="3">3v3</button>
+        <button type="button" class="size-btn" data-size="4">4v4</button>
+        <button type="button" class="size-btn" data-size="5">5v5</button>
+      </div>
+      <div class="vs-row">
+        <div class="vs-label">Budget (Auto = in base al formato · oppure cap fisso)</div>
+        <button type="button" class="budget-btn active" data-budget="auto">Auto</button>
+        <button type="button" class="budget-btn" data-budget="100">100</button>
+        <button type="button" class="budget-btn" data-budget="120">120</button>
+        <button type="button" class="budget-btn" data-budget="140">140</button>
+        <button type="button" class="budget-btn" data-budget="160">160</button>
+      </div>
+      <div class="vs-row">
+        <div class="vs-label">Universo (sceglie chi crea)</div>
+        <div id="vsUniverseHint" style="font-size:12px;color:var(--paper)">Marvel (cambia dal selettore sopra in libero, poi crea)</div>
+      </div>
+      <div class="vs-row">
+        <div class="vs-label">Codice stanza (live)</div>
+        <input class="code-box" id="vsRoomInput" type="text" placeholder="Host: Crea stanza · Ospite: incolla codice e Entra" style="width:100%" />
+      </div>
+      <div class="vs-actions">
+        <button type="button" class="primary" id="vsCreateBtn">Crea stanza</button>
+        <button type="button" id="vsJoinBtn">Entra nella stanza</button>
+        <button type="button" id="vsCopyRoomBtn" disabled>Copia codice</button>
+        <button type="button" id="vsReadyBtn" disabled>Sono pronto</button>
+        <button type="button" id="vsFightBtn" disabled>Avvia scontro</button>
+        <button type="button" id="vsResetBtn">Nuova sfida</button>
+      </div>
+      <div class="vs-status" id="vsConnStatus" style="margin-top:6px">Non connesso</div>
+      <div class="vs-row" style="margin-top:14px">
+        <div class="vs-label">Se il live non va — modalità link (fallback)</div>
+        <textarea class="code-box" id="vsCodeBox" rows="2" placeholder="Incolla qui il link ricevuto"></textarea>
+      </div>
+      <div class="vs-actions">
+        <button type="button" id="vsShareBtn">Copia link stato</button>
+        <button type="button" id="vsApplyLinkBtn">Applica link</button>
+      </div>
+      <div class="vs-status" id="vsStatus">Crea una sfida oppure incolla un codice e premi Unisciti.</div>
+      <div class="side-lists">
+        <div class="side-box a"><h4>Host</h4><ul id="vsHostList"></ul></div>
+        <div class="side-box b"><h4>Ospite</h4><ul id="vsGuestList"></ul></div>
+      </div>
+      <div class="vs-label" style="margin-top:14px">Pool — tocca per ban o pick</div>
+      <div class="draft-pool" id="vsDraftPool"></div>
+    </div>
+  </section>
+
+  <section id="archiveSection">
+    <div class="section-head">
+      <div class="section-title">Archivio<small>ultime battaglie su questo dispositivo</small></div>
+    </div>
+    <div class="archive-grid" id="archiveGrid"></div>
+    <button id="clearArchiveBtn">Svuota archivio</button>
+  </section>
+
+</main>
+
+<script>
+// ---------- DATI ----------
+const CHARACTERS = [
+  {id:'hulk', name:'Hulk', side:'heroes', universe:'marvel', icon:'💪', stats:{forza:10,velocita:4,durabilita:10,energia:6,combattimento:6,intelligenza:4}, blurb:'Forza bruta pressoché illimitata, più si arrabbia più diventa forte.', ability:{name:'Furia Incontrollata', type:'burst', chance:0.30, magnitude:1.6, desc:'30% di infliggere un colpo devastante'}},
+  {id:'thor', name:'Thor', side:'heroes', universe:'marvel', icon:'⚡', stats:{forza:9,velocita:7,durabilita:9,energia:9,combattimento:8,intelligenza:6}, blurb:'Dio del tuono, controlla i fulmini e combatte con il martello.', ability:{name:'Furia di Asgard', type:'burst', chance:0.25, magnitude:1.5, desc:'25% di scatenare un fulmine devastante'}},
+  {id:'ironman', name:'Iron Man', side:'heroes', universe:'marvel', icon:'🤖', stats:{forza:7,velocita:7,durabilita:7,energia:8,combattimento:7,intelligenza:10}, blurb:'Armatura tecnologica avanzata e mente geniale.', ability:{name:'Scudo Repulsore', type:'shield', chance:0.25, magnitude:1, desc:'assorbe il 25% di ogni colpo subito'}},
+  {id:'cap', name:'Captain America', side:'heroes', universe:'marvel', icon:'🛡️', stats:{forza:6,velocita:6,durabilita:6,energia:3,combattimento:9,intelligenza:7}, blurb:'Super soldato con scudo indistruttibile e tattica impeccabile.', ability:{name:'Scudo di Vibranio', type:'shield', chance:0.30, magnitude:1, desc:'assorbe il 30% di ogni colpo subito'}},
+  {id:'spidey', name:'Spider-Man', side:'heroes', universe:'marvel', icon:'🕸️', stats:{forza:6,velocita:8,durabilita:5,energia:3,combattimento:7,intelligenza:8}, blurb:'Agilità sovrumana, ragnatele e senso di ragno.', ability:{name:'Senso di Ragno', type:'dodge', chance:0.30, magnitude:1, desc:'30% di schivare completamente un colpo'}},
+  {id:'widow', name:'Black Widow', side:'heroes', universe:'marvel', icon:'🗡️', stats:{forza:3,velocita:5,durabilita:3,energia:1,combattimento:8,intelligenza:7}, blurb:'Spia d\'élite, combattente corpo a corpo letale.', ability:{name:'Riflessi da Spia', type:'dodge', chance:0.28, magnitude:1, desc:'28% di schivare completamente un colpo'}},
+  {id:'hawkeye', name:'Hawkeye', side:'heroes', universe:'marvel', icon:'🏹', stats:{forza:3,velocita:5,durabilita:3,energia:2,combattimento:7,intelligenza:6}, blurb:'Arciere infallibile con frecce speciali per ogni occasione.', ability:{name:'Freccia Esplosiva', type:'burst', chance:0.22, magnitude:1.4, desc:'22% di piazzare un colpo esplosivo'}},
+  {id:'strange', name:'Doctor Strange', side:'heroes', universe:'marvel', icon:'🔮', stats:{forza:3,velocita:4,durabilita:4,energia:10,combattimento:5,intelligenza:9}, blurb:'Stregone Supremo, piega la realtà con la magia.', ability:{name:'Sigillo Mistico', type:'debuff', chance:0.28, magnitude:0.7, desc:'28% di indebolire il prossimo colpo avversario'}},
+  {id:'panther', name:'Black Panther', side:'heroes', universe:'marvel', icon:'🐾', stats:{forza:6,velocita:7,durabilita:6,energia:4,combattimento:9,intelligenza:8}, blurb:'Re guerriero potenziato dall\'erba a forma di cuore.', ability:{name:'Tuta in Vibranio', type:'dodge', chance:0.22, magnitude:1, desc:'22% di schivare completamente un colpo'}},
+  {id:'witch', name:'Scarlet Witch', side:'heroes', universe:'marvel', icon:'🌀', stats:{forza:3,velocita:4,durabilita:4,energia:10,combattimento:4,intelligenza:6}, blurb:'Manipola la magia del caos a livelli quasi divini.', ability:{name:'Magia del Caos', type:'debuff', chance:0.32, magnitude:0.65, desc:'32% di indebolire il prossimo colpo avversario'}},
+  {id:'vision', name:'Vision', side:'heroes', universe:'marvel', icon:'💎', stats:{forza:7,velocita:7,durabilita:8,energia:8,combattimento:6,intelligenza:8}, blurb:'Sintetico alimentato dalla Gemma della Mente.', ability:{name:'Densità Variabile', type:'shield', chance:0.30, magnitude:1, desc:'assorbe il 30% di ogni colpo subito'}},
+  {id:'wolverine', name:'Wolverine', side:'heroes', universe:'marvel', icon:'🔪', stats:{forza:6,velocita:5,durabilita:9,energia:2,combattimento:9,intelligenza:5}, blurb:'Fattore rigenerante e artigli di adamantio.', ability:{name:'Fattore Rigenerante', type:'heal', chance:0.5, magnitude:0.12, desc:'50% di rigenerare il 12% dei PF massimi'}},
+  {id:'deadpool', name:'Deadpool', side:'heroes', universe:'marvel', icon:'💀', stats:{forza:5,velocita:5,durabilita:8,energia:2,combattimento:8,intelligenza:4}, blurb:'Mercenario chiacchierone con rigenerazione quasi totale.', ability:{name:'Rigenerazione Assurda', type:'heal', chance:0.5, magnitude:0.15, desc:'50% di rigenerare il 15% dei PF massimi'}},
+  {id:'storm', name:'Storm', side:'heroes', universe:'marvel', icon:'🌩️', stats:{forza:3,velocita:5,durabilita:4,energia:8,combattimento:5,intelligenza:6}, blurb:'Controlla gli elementi atmosferici a piacimento.', ability:{name:'Fulmine Accecante', type:'debuff', chance:0.26, magnitude:0.7, desc:'26% di indebolire il prossimo colpo avversario'}},
+  {id:'cyclops', name:'Ciclope', side:'heroes', universe:'marvel', icon:'👁️', stats:{forza:3,velocita:4,durabilita:4,energia:7,combattimento:6,intelligenza:7}, blurb:'Raggi ottici distruttivi e leader tattico degli X-Men.', ability:{name:'Raggio Ottico', type:'burst', chance:0.25, magnitude:1.4, desc:'25% di piazzare un raggio devastante'}},
+  {id:'jean', name:'Jean Grey', side:'heroes', universe:'marvel', icon:'🔥', stats:{forza:3,velocita:4,durabilita:5,energia:10,combattimento:5,intelligenza:8}, blurb:'Telepate e telecinetica, ospita il potere della Fenice.', ability:{name:'Forza della Fenice', type:'burst', chance:0.28, magnitude:1.6, desc:'28% di scatenare la Fenice'}},
+  {id:'groot', name:'Groot', side:'heroes', universe:'marvel', icon:'🌳', stats:{forza:8,velocita:3,durabilita:8,energia:3,combattimento:5,intelligenza:3}, blurb:'Essere arboreo capace di rigenerarsi e crescere a dismisura.', ability:{name:'Ricrescita', type:'heal', chance:0.35, magnitude:0.1, desc:'35% di rigenerare il 10% dei PF massimi'}},
+  {id:'rocket', name:'Rocket Raccoon', side:'heroes', universe:'marvel', icon:'🔧', stats:{forza:3,velocita:6,durabilita:3,energia:3,combattimento:7,intelligenza:8}, blurb:'Esperto di armi ed esplosivi con un caratteraccio.', ability:{name:'Esplosivi Improvvisati', type:'burst', chance:0.25, magnitude:1.4, desc:'25% di piazzare un colpo esplosivo'}},
+  {id:'starlord', name:'Star-Lord', side:'heroes', universe:'marvel', icon:'🚀', stats:{forza:4,velocita:5,durabilita:4,energia:5,combattimento:6,intelligenza:6}, blurb:'Pistole elementali e stivali a razzo, leader dei Guardiani.', ability:{name:'Stivali a Razzo', type:'dodge', chance:0.22, magnitude:1, desc:'22% di schivare completamente un colpo'}},
+  {id:'thanos', name:'Thanos', side:'villain', universe:'marvel', icon:'🧤', stats:{forza:10,velocita:6,durabilita:10,energia:9,combattimento:8,intelligenza:8}, blurb:'Titano Pazzo, tra gli esseri più potenti dell\'universo.', ability:{name:'Guanto dell\'Infinito', type:'burst', chance:0.30, magnitude:1.7, desc:'30% di infliggere un colpo devastante'}},
+  {id:'loki', name:'Loki', side:'villain', universe:'marvel', icon:'🎭', stats:{forza:4,velocita:5,durabilita:5,energia:8,combattimento:6,intelligenza:9}, blurb:'Dio dell\'inganno, maestro di illusioni e stratagemmi.', ability:{name:'Illusione', type:'debuff', chance:0.35, magnitude:0.65, desc:'35% di indebolire il prossimo colpo avversario'}},
+  {id:'venom', name:'Venom', side:'villain', universe:'marvel', icon:'🖤', stats:{forza:8,velocita:6,durabilita:8,energia:5,combattimento:7,intelligenza:5}, blurb:'Simbionte aggressivo che amplifica forza e ferocia.', ability:{name:'Morso Simbionte', type:'burst', chance:0.30, magnitude:1.5, desc:'30% di infliggere un morso devastante'}},
+  {id:'magneto', name:'Magneto', side:'villain', universe:'marvel', icon:'🧲', stats:{forza:3,velocita:4,durabilita:5,energia:9,combattimento:5,intelligenza:8}, blurb:'Controlla il magnetismo e ogni metallo nei dintorni.', ability:{name:'Controllo Magnetico', type:'debuff', chance:0.30, magnitude:0.65, desc:'30% di indebolire il prossimo colpo avversario'}},
+  {id:'marvel', name:'Captain Marvel', side:'heroes', universe:'marvel', icon:'✨', stats:{forza:8,velocita:8,durabilita:8,energia:9,combattimento:7,intelligenza:6}, blurb:'Energia fotonica, volo e forza ai massimi livelli cosmici.', ability:{name:'Esplosione Fotonica', type:'burst', chance:0.30, magnitude:1.6, desc:'30% di scatenare un\'esplosione fotonica'}},
+  {id:'doom', name:'Doctor Doom', side:'villain', universe:'marvel', icon:'👑', stats:{forza:7,velocita:5,durabilita:8,energia:9,combattimento:7,intelligenza:10}, blurb:'Sovrano di Latveria, genio e stregoneria in un\'unica armatura.', ability:{name:'Raggi di Doom', type:'burst', chance:0.28, magnitude:1.55, desc:'28% di scaricare energia arcano-tecnologica'}},
+  {id:'ultron', name:'Ultron', side:'villain', universe:'marvel', icon:'🤖', stats:{forza:8,velocita:6,durabilita:9,energia:8,combattimento:7,intelligenza:9}, blurb:'IA assassina, corpo di vibranio e odio per l\'umanità.', ability:{name:'Corpo di Vibranio', type:'shield', chance:0.28, magnitude:1, desc:'assorbe il 28% di ogni colpo'}},
+  {id:'goblin', name:'Green Goblin', side:'villain', universe:'marvel', icon:'🎃', stats:{forza:5,velocita:7,durabilita:5,energia:6,combattimento:7,intelligenza:8}, blurb:'Genio instabile su aliante, bombe zucca e gas.', ability:{name:'Bombe Zucca', type:'burst', chance:0.30, magnitude:1.45, desc:'30% di un attacco esplosivo'}},
+  {id:'hela', name:'Hela', side:'villain', universe:'marvel', icon:'🗡️', stats:{forza:9,velocita:7,durabilita:8,energia:8,combattimento:9,intelligenza:7}, blurb:'Dea della morte, lame infinite e regno su Hel.', ability:{name:'Lame di Hel', type:'burst', chance:0.28, magnitude:1.55, desc:'28% di un assalto di lame'}},
+  {id:'redskull', name:'Red Skull', side:'villain', universe:'marvel', icon:'💀', stats:{forza:5,velocita:5,durabilita:5,energia:4,combattimento:7,intelligenza:8}, blurb:'Ideologo del male, tattica e Cube cosmico.', ability:{name:'Ordine del Terrore', type:'debuff', chance:0.32, magnitude:0.7, desc:'32% di destabilizzare l\'avversario'}},
+  {id:'killmonger', name:'Killmonger', side:'villain', universe:'marvel', icon:'🐆', stats:{forza:7,velocita:7,durabilita:6,energia:3,combattimento:9,intelligenza:7}, blurb:'Guerriero di Wakanda, artigli di vibranio e rabbia.', ability:{name:'Artigli di Vibranio', type:'burst', chance:0.26, magnitude:1.5, desc:'26% di squarcio devastante'}},
+];
+
+const POKEMON = [
+  {id:'charizard', name:'Charizard', side:'heroes', universe:'pokemon', icon:'🔥', stats:{forza:8,velocita:7,durabilita:6,energia:9,combattimento:7,intelligenza:5}, blurb:'Drago di fuoco che solca i cieli.', ability:{name:'Fuocomoto', type:'burst', chance:0.28, magnitude:1.55, desc:''}},
+  {id:'pikachu', name:'Pikachu', side:'heroes', universe:'pokemon', icon:'⚡', stats:{forza:4,velocita:9,durabilita:4,energia:8,combattimento:6,intelligenza:6}, blurb:'Topo elettrico fulmineo e fedele.', ability:{name:'Fulmine', type:'burst', chance:0.30, magnitude:1.45, desc:''}},
+  {id:'blastoise', name:'Blastoise', side:'heroes', universe:'pokemon', icon:'💧', stats:{forza:7,velocita:4,durabilita:9,energia:7,combattimento:6,intelligenza:5}, blurb:'Tartaruga con cannoni d\'acqua.', ability:{name:'Idropompa', type:'burst', chance:0.26, magnitude:1.5, desc:''}},
+  {id:'venusaur', name:'Venusaur', side:'heroes', universe:'pokemon', icon:'🌿', stats:{forza:6,velocita:4,durabilita:8,energia:7,combattimento:5,intelligenza:5}, blurb:'Pianta gigante che controlla la natura.', ability:{name:'Gigassorbimento', type:'heal', chance:0.40, magnitude:0.14, desc:''}},
+  {id:'lucario', name:'Lucario', side:'heroes', universe:'pokemon', icon:'💠', stats:{forza:7,velocita:8,durabilita:6,energia:7,combattimento:9,intelligenza:7}, blurb:'Combattente aura, disciplina e potenza.', ability:{name:'Sfera Aura', type:'burst', chance:0.28, magnitude:1.5, desc:''}},
+  {id:'gengar', name:'Gengar', side:'villain', universe:'pokemon', icon:'👻', stats:{forza:5,velocita:8,durabilita:5,energia:8,combattimento:7,intelligenza:6}, blurb:'Spettro che si nasconde nell\'ombra.', ability:{name:'Palla Ombra', type:'debuff', chance:0.32, magnitude:0.65, desc:''}},
+  {id:'mewtwo', name:'Mewtwo', side:'villain', universe:'pokemon', icon:'🧬', stats:{forza:7,velocita:8,durabilita:7,energia:10,combattimento:7,intelligenza:10}, blurb:'Leggendario creato in laboratorio.', ability:{name:'Psichico', type:'burst', chance:0.30, magnitude:1.65, desc:''}},
+  {id:'snorlax', name:'Snorlax', side:'heroes', universe:'pokemon', icon:'😴', stats:{forza:9,velocita:2,durabilita:10,energia:3,combattimento:5,intelligenza:3}, blurb:'Massa immobile che assorbe ogni colpo.', ability:{name:'Riposo', type:'heal', chance:0.45, magnitude:0.18, desc:''}},
+  {id:'garchomp', name:'Garchomp', side:'heroes', universe:'pokemon', icon:'🦈', stats:{forza:9,velocita:8,durabilita:7,energia:5,combattimento:8,intelligenza:4}, blurb:'Squalo terrestre veloce e letale.', ability:{name:'Dragartigli', type:'burst', chance:0.27, magnitude:1.5, desc:''}},
+  {id:'greninja', name:'Greninja', side:'heroes', universe:'pokemon', icon:'🥷', stats:{forza:6,velocita:10,durabilita:5,energia:6,combattimento:9,intelligenza:6}, blurb:'Ninja dell\'acqua, silenzioso e preciso.', ability:{name:'Tecnica Ninja', type:'dodge', chance:0.32, magnitude:1, desc:''}},
+  {id:'rayquaza', name:'Rayquaza', side:'heroes', universe:'pokemon', icon:'🐉', stats:{forza:9,velocita:8,durabilita:8,energia:9,combattimento:8,intelligenza:6}, blurb:'Serpente celeste che domina i cieli.', ability:{name:'Iper Raggio', type:'burst', chance:0.28, magnitude:1.6, desc:''}},
+  {id:'umbreon', name:'Umbreon', side:'villain', universe:'pokemon', icon:'🌙', stats:{forza:5,velocita:5,durabilita:8,energia:6,combattimento:6,intelligenza:6}, blurb:'Evoluzione notturna, resistente e tattica.', ability:{name:'Malocchio', type:'debuff', chance:0.30, magnitude:0.7, desc:''}},
+
+  {id:'darkrai', name:'Darkrai', side:'villain', universe:'pokemon', icon:'🌑', stats:{forza:6,velocita:8,durabilita:6,energia:9,combattimento:7,intelligenza:8}, blurb:'Leggendario delle ombre, induce incubi.', ability:{name:'Neropulsar', type:'burst', chance:0.28, magnitude:1.5, desc:'28% di un colpo d\'ombra devastante'}},
+  {id:'giratina', name:'Giratina', side:'villain', universe:'pokemon', icon:'👻', stats:{forza:9,velocita:5,durabilita:9,energia:8,combattimento:7,intelligenza:7}, blurb:'Signore del Mondo Distorto, forza antimateria.', ability:{name:'Dragofuria', type:'burst', chance:0.26, magnitude:1.55, desc:'26% di assalto draconico'}},
+  {id:'hydreigon', name:'Hydreigon', side:'villain', universe:'pokemon', icon:'🐉', stats:{forza:8,velocita:6,durabilita:7,energia:8,combattimento:8,intelligenza:6}, blurb:'Drago a tre teste, devastazione pura.', ability:{name:'Black Cannon', type:'burst', chance:0.28, magnitude:1.5, desc:'28% di scarica oscura'}},
+  {id:'tyranitar', name:'Tyranitar', side:'villain', universe:'pokemon', icon:'🦖', stats:{forza:9,velocita:4,durabilita:9,energia:6,combattimento:7,intelligenza:5}, blurb:'Corazza rocciosa, crea tempeste di sabbia.', ability:{name:'Frana', type:'burst', chance:0.26, magnitude:1.5, desc:'26% di colpo tellurico'}},
+];
+
+const NINTENDO = [
+  {id:'mario', name:'Mario', side:'heroes', universe:'nintendo', icon:'🍄', stats:{forza:6,velocita:6,durabilita:6,energia:4,combattimento:7,intelligenza:5}, blurb:'Idraulico indistruttibile di tuttofare.', ability:{name:'Super Stella', type:'burst', chance:0.25, magnitude:1.5, desc:''}},
+  {id:'luigi', name:'Luigi', side:'heroes', universe:'nintendo', icon:'👻', stats:{forza:5,velocita:7,durabilita:5,energia:4,combattimento:6,intelligenza:5}, blurb:'Fratello più alto, un po\' pauroso ma capace.', ability:{name:'Poltergust', type:'debuff', chance:0.28, magnitude:0.7, desc:''}},
+  {id:'peach', name:'Peach', side:'heroes', universe:'nintendo', icon:'👑', stats:{forza:3,velocita:5,durabilita:4,energia:6,combattimento:5,intelligenza:7}, blurb:'Principessa con ombrello e magie leggere.', ability:{name:'Parasole', type:'dodge', chance:0.30, magnitude:1, desc:''}},
+  {id:'bowser', name:'Bowser', side:'villain', universe:'nintendo', icon:'🐢', stats:{forza:9,velocita:4,durabilita:9,energia:7,combattimento:7,intelligenza:5}, blurb:'Re dei Koopa, fuoco e corazza.', ability:{name:'Soffio di Fuoco', type:'burst', chance:0.28, magnitude:1.55, desc:''}},
+  {id:'link', name:'Link', side:'heroes', universe:'nintendo', icon:'🗡️', stats:{forza:7,velocita:7,durabilita:6,energia:5,combattimento:9,intelligenza:6}, blurb:'Eroe di Hyrule, spadaccino silenzioso.', ability:{name:'Spin Attack', type:'burst', chance:0.27, magnitude:1.5, desc:''}},
+  {id:'zelda', name:'Zelda', side:'heroes', universe:'nintendo', icon:'🔷', stats:{forza:3,velocita:5,durabilita:4,energia:9,combattimento:5,intelligenza:9}, blurb:'Principessa saggia con poteri divini.', ability:{name:'Luce di Nayru', type:'shield', chance:0.30, magnitude:1, desc:''}},
+  {id:'ganondorf', name:'Ganondorf', side:'villain', universe:'nintendo', icon:'🐗', stats:{forza:9,velocita:5,durabilita:8,energia:8,combattimento:8,intelligenza:7}, blurb:'Re Demone, maledizione eterna di Hyrule.', ability:{name:'Sfera del Male', type:'burst', chance:0.28, magnitude:1.6, desc:''}},
+  {id:'samus', name:'Samus', side:'heroes', universe:'nintendo', icon:'🦾', stats:{forza:7,velocita:7,durabilita:8,energia:8,combattimento:8,intelligenza:8}, blurb:'Cacciatrice di taglie in Power Suit.', ability:{name:'Missile a Carica', type:'burst', chance:0.28, magnitude:1.55, desc:''}},
+  {id:'kirby', name:'Kirby', side:'heroes', universe:'nintendo', icon:'🩷', stats:{forza:5,velocita:5,durabilita:7,energia:6,combattimento:6,intelligenza:3}, blurb:'Pallina rosa che assorbe i poteri altrui.', ability:{name:'Inalazione', type:'heal', chance:0.40, magnitude:0.15, desc:''}},
+  {id:'dk', name:'Donkey Kong', side:'heroes', universe:'nintendo', icon:'🦍', stats:{forza:9,velocita:5,durabilita:8,energia:3,combattimento:7,intelligenza:3}, blurb:'Scimmione con forza devastante.', ability:{name:'Barile Esplosivo', type:'burst', chance:0.26, magnitude:1.5, desc:''}},
+  {id:'fox', name:'Fox McCloud', side:'heroes', universe:'nintendo', icon:'🦊', stats:{forza:5,velocita:9,durabilita:5,energia:6,combattimento:8,intelligenza:7}, blurb:'Pilota della Star Fox, riflessi fulminei.', ability:{name:'Reflector', type:'shield', chance:0.28, magnitude:1, desc:''}},
+  {id:'ridley', name:'Ridley', side:'villain', universe:'nintendo', icon:'🦇', stats:{forza:8,velocita:8,durabilita:7,energia:7,combattimento:8,intelligenza:6}, blurb:'Pirata spaziale, nemesi di Samus.', ability:{name:'Soffio al Plasma', type:'burst', chance:0.28, magnitude:1.55, desc:''}},
+
+  {id:'wario', name:'Wario', side:'villain', universe:'nintendo', icon:'💰', stats:{forza:8,velocita:4,durabilita:8,energia:4,combattimento:6,intelligenza:5}, blurb:'Antitesi di Mario: forza bruta e avidità.', ability:{name:'Wario Waft', type:'burst', chance:0.28, magnitude:1.5, desc:'28% di esplosione... particolare'}},
+  {id:'dedede', name:'King Dedede', side:'villain', universe:'nintendo', icon:'🐧', stats:{forza:8,velocita:4,durabilita:8,energia:5,combattimento:6,intelligenza:5}, blurb:'Re egoista di Dream Land, mazza e inalazione.', ability:{name:'Mazza del Re', type:'burst', chance:0.26, magnitude:1.5, desc:'26% di colpo di mazza devastante'}},
+  {id:'andross', name:'Andross', side:'villain', universe:'nintendo', icon:'🧠', stats:{forza:5,velocita:5,durabilita:7,energia:9,combattimento:6,intelligenza:9}, blurb:'Cervello fluttuante, tiranno di Venom.', ability:{name:'Raggi di Andross', type:'burst', chance:0.28, magnitude:1.55, desc:'28% di scarica energetica'}},
+  {id:'krool', name:'King K. Rool', side:'villain', universe:'nintendo', icon:'🐊', stats:{forza:8,velocita:3,durabilita:9,energia:5,combattimento:7,intelligenza:6}, blurb:'Re dei Kremling, corona e pancia d\'acciaio.', ability:{name:'Pancia d\'Acciaio', type:'shield', chance:0.30, magnitude:1, desc:'assorbe il 30% di ogni colpo'}},
+];
+
+const UNIVERSES = {
+  marvel: { id:'marvel', label:'Marvel', icon:'🦸', get characters(){ return CHARACTERS; }, chipHero:'Eroe', chipVillain:'Villain' },
+  pokemon: { id:'pokemon', label:'Pokémon', icon:'⚡', get characters(){ return POKEMON; }, chipHero:'Alleato', chipVillain:'Avversario' },
+  nintendo: { id:'nintendo', label:'Nintendo', icon:'🎮', get characters(){ return NINTENDO; }, chipHero:'Eroe', chipVillain:'Villain' },
+  multiverso: { id:'multiverso', label:'Multiverso', icon:'🌌', get characters(){ return [...CHARACTERS, ...POKEMON, ...NINTENDO]; }, chipHero:'Eroe', chipVillain:'Villain' }
+};
+
+
+
+// ---------- SINERGIE ----------
+// min = quanti servono per attivarsi
+// Se la lista ha solo 2 membri: un solo livello (completo)
+// Se ha 3+: a "min" bonus parziale, con TUTTI i membri bonus pieno (più alto)
+const SYNERGIES = [
+  { id:'avengers', name:'Avengers Assemble', members:['ironman','cap','thor','hulk','widow','spidey','marvel'], min:3,
+    partial:{combattimento:2,forza:1}, full:{combattimento:3,forza:2,durabilita:1} },
+  { id:'asgard', name:'Sangue di Asgard', members:['thor','loki','hela'], min:2,
+    partial:{energia:2}, full:{energia:3,combattimento:1} },
+  { id:'xmen', name:'X-Men', members:['wolverine','jean','magneto','storm','cyclops'], min:2,
+    partial:{intelligenza:1,energia:1}, full:{intelligenza:2,energia:2,combattimento:1} },
+  { id:'mystic', name:'Potere Mistico', members:['strange','witch'], min:2,
+    partial:{energia:2}, full:{energia:2} },
+  { id:'guardians', name:'Guardiani', members:['starlord','groot','rocket'], min:2,
+    partial:{combattimento:1,velocita:1}, full:{combattimento:2,velocita:2,intelligenza:1} },
+  { id:'wakanda', name:'Trono di Wakanda', members:['panther','killmonger'], min:2,
+    partial:{combattimento:2}, full:{combattimento:2} },
+  { id:'tech_war', name:'Guerra delle Macchine', members:['ironman','ultron'], min:2,
+    partial:{intelligenza:2,energia:1}, full:{intelligenza:2,energia:1} },
+  { id:'web', name:'Guerra della Ragnatela', members:['spidey','goblin','venom'], min:2,
+    partial:{velocita:1,combattimento:1}, full:{velocita:2,combattimento:2} },
+  { id:'doom_reign', name:'Regno di Doom', members:['doom','redskull'], min:2,
+    partial:{intelligenza:1,energia:1}, full:{intelligenza:1,energia:1} },
+  { id:'bros', name:'Fratelli Mario', members:['mario','luigi'], min:2,
+    partial:{combattimento:2,velocita:1}, full:{combattimento:2,velocita:1} },
+  { id:'hyrule', name:'Destino di Hyrule', members:['link','zelda'], min:2,
+    partial:{combattimento:2,energia:1}, full:{combattimento:2,energia:1} },
+  { id:'hyrule_dark', name:'Ombra di Hyrule', members:['ganondorf','link'], min:2,
+    partial:{forza:2}, full:{forza:2} },
+  { id:'metroid', name:'Cacciatori', members:['samus','ridley'], min:2,
+    partial:{energia:2,velocita:1}, full:{energia:2,velocita:1} },
+  { id:'kong', name:'Giungla in Guerra', members:['dk','krool'], min:2,
+    partial:{forza:2}, full:{forza:2} },
+  { id:'dreamland', name:'Dream Land', members:['kirby','dedede'], min:2,
+    partial:{durabilita:1,forza:1}, full:{durabilita:1,forza:1} },
+  { id:'starfox', name:'Guerra di Lylat', members:['fox','andross'], min:2,
+    partial:{velocita:1,energia:1}, full:{velocita:1,energia:1} },
+  { id:'wario_bros', name:'Oro e Funghi', members:['mario','wario'], min:2,
+    partial:{forza:1,combattimento:1}, full:{forza:1,combattimento:1} },
+  { id:'starter', name:'Trio di Kanto', members:['charizard','blastoise','venusaur'], min:2,
+    partial:{energia:1,forza:1}, full:{energia:2,forza:2,durabilita:1} },
+  { id:'legend', name:'Leggendari', members:['mewtwo','rayquaza','darkrai','giratina'], min:2,
+    partial:{energia:2}, full:{energia:3,intelligenza:1} },
+  { id:'dark_types', name:'Ombre di Pokémon', members:['gengar','umbreon','darkrai','hydreigon'], min:2,
+    partial:{velocita:1,energia:1}, full:{velocita:2,energia:2} },
+  { id:'speedsters', name:'Velocisti', members:['pikachu','greninja','fox','spidey'], min:2,
+    partial:{velocita:2}, full:{velocita:3,combattimento:1} },
+  { id:'tanks', name:'Muri Indistruttibili', members:['hulk','thanos','snorlax','bowser','dk','tyranitar','krool','ultron'], min:2,
+    partial:{durabilita:2}, full:{durabilita:3,forza:2} },
+  { id:'multiverse_chaos', name:'Caos Multiversale', members:['thanos','mewtwo','ganondorf','bowser','doom','giratina'], min:2,
+    partial:{forza:1,energia:1}, full:{forza:2,energia:2,combattimento:1} }
+];
+
+function getActiveSynergies(teamIds) {
+  const set = new Set(teamIds);
+  const active = [];
+  SYNERGIES.forEach(syn => {
+    const present = syn.members.filter(id => set.has(id));
+    if (present.length < syn.min) return;
+    // Coppie (2 membri): un solo livello, sempre "completa"
+    const isPair = syn.members.length <= 2;
+    const complete = isPair || present.length >= syn.members.length;
+    active.push({
+      ...syn,
+      present,
+      complete,
+      bonus: complete ? syn.full : syn.partial
+    });
+  });
+  return active;
+}
+
+function applySynergyBonus(baseStats, teamIds) {
+  const syns = getActiveSynergies(teamIds);
+  const stats = {...baseStats};
+  syns.forEach(s => {
+    Object.keys(s.bonus).forEach(k => {
+      stats[k] = (stats[k] || 0) + s.bonus[k];
+    });
+  });
+  return stats;
+}
+
+function synergyPowerBonus(teamIds) {
+  const syns = getActiveSynergies(teamIds);
+  let extra = 0;
+  syns.forEach(s => {
+    Object.values(s.bonus).forEach(v => { extra += v; });
+  });
+  return extra;
+}
+
+const assignment = {};
+let currentUniverse = 'marvel';
+
+let currentFilter = 'all';
+
+const rosterGrid = document.getElementById('rosterGrid');
+const rosterCount = document.getElementById('rosterCount');
+const universeGrid = document.getElementById('universeGrid');
+const teamAList = document.getElementById('teamAList');
+const teamBList = document.getElementById('teamBList');
+const teamAPowerEl = document.getElementById('teamAPower');
+const teamBPowerEl = document.getElementById('teamBPower');
+const fightBtn = document.getElementById('fightBtn');
+const fightHint = document.getElementById('fightHint');
+const resultsSection = document.getElementById('results');
+const logBox = document.getElementById('logBox');
+const winnerBanner = document.getElementById('winnerBanner');
+
+function statLine(s){
+  return `F${s.forza} V${s.velocita} D${s.durabilita} E${s.energia} C${s.combattimento} I${s.intelligenza}`;
+}
+function totalPower(c){
+  const s = c.stats;
+  return s.forza+s.velocita+s.durabilita+s.energia+s.combattimento+s.intelligenza;
+}
+
+
+
+function updateFilterLabels() {
+  const bar = document.getElementById('filterBar');
+  if (!bar) return;
+  bar.innerHTML = '';
+  currentFilter = 'all';
+
+  function addBtn(filter, label, active) {
+    const b = document.createElement('button');
+    b.className = 'filter-btn' + (active ? ' active' : '');
+    b.dataset.filter = filter;
+    b.textContent = label;
+    b.addEventListener('click', () => {
+      bar.querySelectorAll('.filter-btn').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      currentFilter = filter;
+      renderRoster();
+    });
+    bar.appendChild(b);
+  }
+
+  addBtn('all', 'TUTTI', true);
+
+  if (currentUniverse === 'multiverso') {
+    addBtn('marvel', 'MARVEL', false);
+    addBtn('pokemon', 'POKÉMON', false);
+    addBtn('nintendo', 'NINTENDO', false);
+  } else {
+    const uni = UNIVERSES[currentUniverse];
+    addBtn('heroes', (uni.chipHero || 'Eroi').toUpperCase(), false);
+    addBtn('villain', (uni.chipVillain || 'Villain').toUpperCase(), false);
+  }
+}
+
+
+function renderUniverses(){
+  if(!universeGrid) return;
+  universeGrid.innerHTML = '';
+  Object.values(UNIVERSES).forEach(u => {
+    const btn = document.createElement('button');
+    btn.className = 'universe-btn' + (u.id === currentUniverse ? ' active' : '');
+    btn.innerHTML = '<span class="u-icon">'+u.icon+'</span><span class="u-name">'+u.label+'</span><div class="u-count">'+u.characters.length+' personaggi</div>';
+    btn.addEventListener('click', () => {
+      Object.keys(assignment).forEach(id => {
+        if (!u.characters.find(c => c.id === id)) delete assignment[id];
+      });
+      currentUniverse = u.id;
+      currentFilter = 'all';
+      updateFilterLabels();
+      renderUniverses();
+      refreshAll();
+      if(resultsSection) resultsSection.style.display = 'none';
+    });
+    universeGrid.appendChild(btn);
+  });
+}
+
+function renderRoster(){
+  const uni = UNIVERSES[currentUniverse];
+  const list = uni.characters.filter(c => {
+    if (currentFilter === 'all') return true;
+    if (currentFilter === 'heroes' || currentFilter === 'villain') return c.side === currentFilter;
+    if (currentFilter === 'marvel' || currentFilter === 'pokemon' || currentFilter === 'nintendo') return c.universe === currentFilter;
+    return true;
+  });
+  if(rosterCount) rosterCount.textContent = list.length + ' personaggi · ' + uni.label;
+  rosterGrid.innerHTML = '';
+  list.forEach(c => {
+    const card = document.createElement('div');
+    card.className = 'card' + (c.side==='villain' ? ' villain' : '');
+
+    const top = document.createElement('div');
+    top.className = 'card-top';
+    const nameWrap = document.createElement('div');
+    nameWrap.className = 'name-wrap';
+    const icon = document.createElement('div');
+    icon.className = 'icon-badge';
+    icon.textContent = c.icon;
+    const name = document.createElement('div');
+    name.className = 'card-name';
+    name.textContent = c.name;
+    nameWrap.appendChild(icon);
+    nameWrap.appendChild(name);
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.textContent = c.side==='villain' ? uni.chipVillain : uni.chipHero;
+    top.appendChild(nameWrap);
+    top.appendChild(chip);
+
+    const stats = document.createElement('div');
+    stats.className = 'stat-line';
+    stats.textContent = statLine(c.stats);
+
+    const ability = document.createElement('div');
+    ability.className = 'ability-line';
+    ability.textContent = '★ ' + c.ability.name;
+
+    const blurb = document.createElement('div');
+    blurb.className = 'blurb';
+    blurb.textContent = c.blurb;
+
+    card.appendChild(top);
+    card.appendChild(stats);
+    card.appendChild(ability);
+    card.appendChild(blurb);
+
+    if(currentUniverse==='multiverso' && c.universe){
+      const ut = document.createElement('div');
+      ut.className = 'uni-tag';
+      ut.textContent = c.universe;
+      card.appendChild(ut);
+    }
+
+    const current = assignment[c.id];
+    if(current){
+      const btn = document.createElement('button');
+      btn.className = 'assigned-btn';
+      btn.style.background = current==='A' ? 'var(--teamA)' : 'var(--teamB)';
+      btn.textContent = 'IN SQUADRA ' + current + ' · RIMUOVI';
+      btn.addEventListener('click', () => { delete assignment[c.id]; refreshAll(); });
+      card.appendChild(btn);
+    } else {
+      const actions = document.createElement('div');
+      actions.className = 'card-actions';
+      const btnA = document.createElement('button');
+      btnA.className = 'add-btn a';
+      btnA.textContent = '→ Squadra A';
+      btnA.addEventListener('click', () => { assignment[c.id] = 'A'; refreshAll(); });
+      const btnB = document.createElement('button');
+      btnB.className = 'add-btn b';
+      btnB.textContent = '→ Squadra B';
+      btnB.addEventListener('click', () => { assignment[c.id] = 'B'; refreshAll(); });
+      actions.appendChild(btnA);
+      actions.appendChild(btnB);
+      card.appendChild(actions);
+    }
+    rosterGrid.appendChild(card);
+  });
+}
+
+function renderTeams(){
+  const teamAIds = Object.keys(assignment).filter(id => assignment[id]==='A');
+  const teamBIds = Object.keys(assignment).filter(id => assignment[id]==='B');
+
+  function fillList(ids, ul){
+    ul.innerHTML = '';
+    if(ids.length===0){
+      const li = document.createElement('li');
+      li.className = 'empty-note';
+      li.style.background = 'transparent';
+      li.textContent = 'Nessun personaggio ancora selezionato';
+      ul.appendChild(li);
+      return;
+    }
+    ids.forEach(id => {
+      const c = findChar(id);
+      if(!c) return;
+      const li = document.createElement('li');
+      const label = document.createElement('span');
+      const st = applySynergyBonus(c.stats, ids);
+      const pow = st.forza+st.velocita+st.durabilita+st.energia+st.combattimento+st.intelligenza;
+      label.textContent = `${c.icon||''} ${c.name} · ${pow}`;
+      const rm = document.createElement('button');
+      rm.className = 'rm';
+      rm.textContent = '✕';
+      rm.addEventListener('click', () => { delete assignment[id]; refreshAll(); });
+      li.appendChild(label);
+      li.appendChild(rm);
+      ul.appendChild(li);
+    });
+  }
+  fillList(teamAIds, teamAList);
+  fillList(teamBIds, teamBList);
+
+  const powerA = teamAIds.reduce((s, id) => {
+    const c = findChar(id); if(!c) return s;
+    const st = applySynergyBonus(c.stats, teamAIds);
+    return s + st.forza+st.velocita+st.durabilita+st.energia+st.combattimento+st.intelligenza;
+  }, 0);
+  const powerB = teamBIds.reduce((s, id) => {
+    const c = findChar(id); if(!c) return s;
+    const st = applySynergyBonus(c.stats, teamBIds);
+    return s + st.forza+st.velocita+st.durabilita+st.energia+st.combattimento+st.intelligenza;
+  }, 0);
+  teamAPowerEl.textContent = powerA;
+  teamBPowerEl.textContent = powerB;
+
+  // badge sinergie
+  const synA = getActiveSynergies(teamAIds);
+  const synB = getActiveSynergies(teamBIds);
+  const boxA = document.getElementById('teamASynergies');
+  const boxB = document.getElementById('teamBSynergies');
+  const synPA = document.getElementById('teamASynergyPower');
+  const synPB = document.getElementById('teamBSynergyPower');
+  if(boxA){
+    boxA.innerHTML = '';
+    synA.forEach(s => {
+      const b = document.createElement('span');
+      b.className = 'syn-badge ' + (s.complete ? 'full' : 'partial');
+      b.textContent = (s.complete ? '★ ' : '☆ ') + s.name + (s.complete || s.members.length<=2 ? '' : ' ('+s.present.length+'/'+s.members.length+')');
+      boxA.appendChild(b);
+    });
+  }
+  if(boxB){
+    boxB.innerHTML = '';
+    synB.forEach(s => {
+      const b = document.createElement('span');
+      b.className = 'syn-badge ' + (s.complete ? 'full' : 'partial');
+      b.textContent = (s.complete ? '★ ' : '☆ ') + s.name + (s.complete || s.members.length<=2 ? '' : ' ('+s.present.length+'/'+s.members.length+')');
+      boxB.appendChild(b);
+    });
+  }
+  if(synPA){
+    if(synA.length){ synPA.style.display='block'; synPA.textContent = 'Bonus sinergie attivi'; }
+    else synPA.style.display='none';
+  }
+  if(synPB){
+    if(synB.length){ synPB.style.display='block'; synPB.textContent = 'Bonus sinergie attivi'; }
+    else synPB.style.display='none';
+  }
+
+  const ready = teamAIds.length>0 && teamBIds.length>0;
+  fightBtn.disabled = !ready;
+  fightHint.textContent = ready
+    ? `${teamAIds.length} vs ${teamBIds.length} combattenti pronti`
+    : 'Aggiungi almeno un personaggio a ciascuna squadra';
+}
+
+function refreshAll(){
+  renderRoster();
+  renderTeams();
+}
+
+// filter buttons wired in updateFilterLabels()
+
+// ---------- SCENARI (con effetti reali) ----------
+
+const SCENARI_MARVEL = [
+  {nome:'le rovine di un antico tempio asgardiano', atmosfera:'La nebbia si alza tra le colonne spezzate. Il tuono rimbomba lontano.', effetto:'I fulmini e l\'energia divina amplificano chi combatte con poteri mistici o elettrici.', apply:(f)=>{ if(f.stats.energia>=8){ f.stats={...f.stats,energia:f.stats.energia+2}; return true;} return false; }},
+  {nome:'le strade di New York sotto un temporale anomalo', atmosfera:'I grattacieli oscillano. L\'acqua scorre a fiumi tra le auto ribaltate.', effetto:'La pioggia riduce la visibilità: schivare è più facile.', apply:(f)=>{ if(f.ability.type==='dodge'){ f.ability={...f.ability,chance:Math.min(f.ability.chance+0.12,0.55)}; return true;} return false; }},
+  {nome:'le rovine di Wakanda dopo un assalto', atmosfera:'Il vibranio scintilla tra le macerie.', effetto:'Il vibranio residuo rinforza scudi e armature.', apply:(f)=>{ if(f.ability.type==='shield'){ f.ability={...f.ability,chance:Math.min(f.ability.chance+0.12,0.55)}; return true;} return false; }},
+  {nome:'un cratere sulla superficie di una luna deserta', atmosfera:'Il silenzio è totale. Solo la polvere grigia si solleva.', effetto:'La bassa gravità rende i colpi di forza più devastanti.', apply:(f)=>{ if(f.stats.forza>=7){ f.stats={...f.stats,forza:f.stats.forza+2}; return true;} return false; }},
+  {nome:'il cuore di un laboratorio S.H.I.E.L.D. evacuato', atmosfera:'Luci di emergenza. Odore di ozono e metallo bruciato.', effetto:'Tecnologia e intelligenza contano di più.', apply:(f)=>{ if(f.stats.intelligenza>=7){ f.stats={...f.stats,intelligenza:f.stats.intelligenza+2,combattimento:f.stats.combattimento+1}; return true;} return false; }},
+  {nome:'le fondamenta di un edificio crollato a Sokovia', atmosfera:'Polvere e detriti. Sirene lontane.', effetto:'Il terreno instabile rende i colpi devastanti più pericolosi.', apply:(f)=>{ if(f.ability.type==='burst'){ f.ability={...f.ability,chance:Math.min(f.ability.chance+0.10,0.50)}; return true;} return false; }}
+];
+const SCENARI_POKEMON = [
+  {nome:'un campo di battaglia nella regione di Kanto', atmosfera:'L\'erba alta si muove. In lontananza, un centro Pokémon.', effetto:'Il terreno naturale favorisce chi ha grande resistenza.', apply:(f)=>{ if(f.stats.durabilita>=7){ f.maxHp=Math.round(f.maxHp*1.12); f.hp=f.maxHp; return true;} return false; }},
+  {nome:'la vetta del Monte Argento sotto una tempesta', atmosfera:'Fulmini e neve. Il vento taglia il respiro.', effetto:'L\'energia elettrica e i colpi potenti sono amplificati.', apply:(f)=>{ if(f.stats.energia>=8){ f.stats={...f.stats,energia:f.stats.energia+2}; return true;} return false; }},
+  {nome:'le rovine di un tempio antico a Johto', atmosfera:'Statue di pietra. Un\'aura misteriosa permea l\'aria.', effetto:'I poteri psichici e gli effetti debilitanti sono più efficaci.', apply:(f)=>{ if(f.ability.type==='debuff'){ f.ability={...f.ability,chance:Math.min(f.ability.chance+0.12,0.55)}; return true;} return false; }},
+  {nome:'una spiaggia al tramonto nella regione di Alola', atmosfera:'Onde calme, sabbia calda, luce dorata.', effetto:'Chi sa schivare e muoversi veloce ha un vantaggio netto.', apply:(f)=>{ if(f.stats.velocita>=8){ f.stats={...f.stats,velocita:f.stats.velocita+2}; return true;} return false; }},
+  {nome:'il cuore di una grotta di cristalli a Sinnoh', atmosfera:'Riflessi di luce. Un\'energia antica pulsa nelle pareti.', effetto:'I colpi devastanti trovano più spazio per esprimersi.', apply:(f)=>{ if(f.ability.type==='burst'){ f.ability={...f.ability,chance:Math.min(f.ability.chance+0.10,0.50)}; return true;} return false; }},
+  {nome:'un laboratorio abbandonato del Team Rocket', atmosfera:'Macchine spente, gabbie vuote, odore di chimica.', effetto:'Chi sa curarsi e resistere trae vantaggio dall\'ambiente ostile.', apply:(f)=>{ if(f.ability.type==='heal'||f.stats.durabilita>=8){ f.maxHp=Math.round(f.maxHp*1.12); f.hp=f.maxHp; return true;} return false; }}
+];
+const SCENARI_NINTENDO = [
+  {nome:'il Regno dei Funghi sotto assedio', atmosfera:'Blocchi di mattoni, tubi verdi, nubi a forma di fungo.', effetto:'Lo spirito avventuroso amplifica chi combatte con cuore e coraggio.', apply:(f)=>{ if(f.side==='heroes'){ f.stats={...f.stats,combattimento:f.stats.combattimento+1}; return true;} return false; }},
+  {nome:'le rovine di Hyrule dopo la Calamità', atmosfera:'Pilastri spezzati, custodiani spenti, vento sulle rovine.', effetto:'La saggezza antica e gli scudi reggono meglio qui.', apply:(f)=>{ if(f.ability.type==='shield'){ f.ability={...f.ability,chance:Math.min(f.ability.chance+0.12,0.55)}; return true;} return false; }},
+  {nome:'una stazione spaziale infetta dai parassiti', atmosfera:'Corridoi metallici, allarmi rossi, silenzio inquietante.', effetto:'Armi a energia e colpi devastanti trovano il loro terreno ideale.', apply:(f)=>{ if(f.ability.type==='burst'){ f.ability={...f.ability,chance:Math.min(f.ability.chance+0.10,0.50)}; return true;} return false; }},
+  {nome:'l\'isola di Dream Land sotto un cielo rosa', atmosfera:'Nuvole soffici, stelle cadenti, aria leggera.', effetto:'Chi sa recuperare forze e chi è leggero di movimento ha un vantaggio.', apply:(f)=>{ if(f.ability.type==='heal'||f.stats.velocita>=7){ f.stats={...f.stats,velocita:f.stats.velocita+1}; f.maxHp=Math.round(f.maxHp*1.08); f.hp=f.maxHp; return true;} return false; }},
+  {nome:'la giungla di DK Island al tramonto', atmosfera:'Barili, banane, rampicanti e il rombo di una cascata.', effetto:'La forza bruta regna in questo ambiente selvaggio.', apply:(f)=>{ if(f.stats.forza>=8){ f.stats={...f.stats,forza:f.stats.forza+2}; return true;} return false; }},
+  {nome:'lo spazio profondo tra due flotte in guerra', atmosfera:'Stelle lontane, scudi energetici, silenzio cosmico.', effetto:'Riflessi e scudi contano più della forza grezza.', apply:(f)=>{ if(f.ability.type==='shield'||f.stats.velocita>=8){ f.stats={...f.stats,velocita:f.stats.velocita+1}; return true;} return false; }}
+];
+const SCENARI_MULTIVERSO = [
+  {nome:'una fenditura tra le realtà', atmosfera:'Frammenti di mondi diversi fluttuano nell\'aria. Le leggi della fisica traballano.', effetto:'Chi ha grande energia o poteri devastanti sfrutta il caos interdimensionale.', apply:(f)=>{ if(f.stats.energia>=8){ f.stats={...f.stats,energia:f.stats.energia+2}; return true;} return false; }},
+  {nome:'un\'arena costruita con pezzi di ogni mondo', atmosfera:'Tubi verdi accanto a colonne asgardiane, cristalli Pokémon e mattoni del Regno dei Funghi.', effetto:'Nessun mondo domina: contano solo velocità e combattimento.', apply:(f)=>{ if(f.stats.combattimento>=7){ f.stats={...f.stats,combattimento:f.stats.combattimento+2}; return true;} return false; }},
+  {nome:'il vuoto tra le dimensioni', atmosfera:'Nero assoluto. Solo i combattenti illuminano lo spazio.', effetto:'La resistenza e la capacità di recupero fanno la differenza.', apply:(f)=>{ if(f.stats.durabilita>=7||f.ability.type==='heal'){ f.maxHp=Math.round(f.maxHp*1.15); f.hp=f.maxHp; return true;} return false; }},
+  {nome:'una città in cui tutti i mondi si sovrappongono', atmosfera:'Grattacieli, castelli, laboratori e giungle fusi insieme.', effetto:'Chi sa schivare e chi colpisce forte trova più aperture.', apply:(f)=>{ if(f.ability.type==='dodge'||f.ability.type==='burst'){ f.ability={...f.ability,chance:Math.min(f.ability.chance+0.10,0.55)}; return true;} return false; }},
+  {nome:'il ponte di un\'astronave che attraversa i mondi', atmosfera:'Allarmi, oblò su galassie sconosciute, gravità instabile.', effetto:'Velocità e intelligenza contano più della forza grezza.', apply:(f)=>{ if(f.stats.velocita>=7){ f.stats={...f.stats,velocita:f.stats.velocita+2}; return true;} return false; }},
+  {nome:'un tempio dimenticato al crocevia dei destini', atmosfera:'Statue di eroi di ogni universo. Un silenzio solenne.', effetto:'I poteri debilitanti e gli scudi sono più efficaci in questo luogo sacro.', apply:(f)=>{ if(f.ability.type==='debuff'||f.ability.type==='shield'){ f.ability={...f.ability,chance:Math.min(f.ability.chance+0.12,0.55)}; return true;} return false; }}
+];
+const SCENARI_BY_UNI = { marvel: SCENARI_MARVEL, pokemon: SCENARI_POKEMON, nintendo: SCENARI_NINTENDO, multiverso: SCENARI_MULTIVERSO };
+function getActiveChars(){ return UNIVERSES[currentUniverse].characters; }
+function getActiveScenarios(){ return SCENARI_BY_UNI[currentUniverse]; }
+function findChar(id){
+  return getActiveChars().find(c => c.id===id) || [...CHARACTERS, ...POKEMON, ...NINTENDO].find(c => c.id===id);
+}
+
+
+
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+function makeFighter(id, teamIds){
+  const c = findChar(id);
+  const st = applySynergyBonus(c.stats, teamIds || []);
+  const maxHp = 65 + st.durabilita*9;
+  return {
+    id: c.id,
+    name: c.name,
+    icon: c.icon,
+    stats: {...st},
+    ability: {...c.ability},
+    hp: maxHp,
+    maxHp,
+    debuffed: false,
+    debuffValue: 1,
+    scenarioBoosted: false
+  };
+}
+
+function computeDamage(attacker, defender){
+  const s = attacker.stats;
+  const base = (s.forza*0.35 + s.energia*0.35 + s.combattimento*0.30);
+  const rand = 0.75 + Math.random()*0.5;
+  let dmg = base * rand * 2.5;
+  dmg = Math.max(Math.round(dmg - defender.stats.durabilita*1.2), 6);
+  return dmg;
+}
+
+// Simulazione: raccoglie eventi su tutto l'arco dello scontro
+function simulateBattle(teamAIds, teamBIds){
+  const queueA = teamAIds.map(id => makeFighter(id, teamAIds));
+  const queueB = teamBIds.map(id => makeFighter(id, teamBIds));
+  const scenario = pick(getActiveScenarios());
+  const initialCountA = queueA.length;
+  const initialCountB = queueB.length;
+
+  const boostedA = [];
+  const boostedB = [];
+  [...queueA, ...queueB].forEach(f => {
+    if (scenario.apply(f)) {
+      f.scenarioBoosted = true;
+      if (queueA.includes(f)) boostedA.push(f.name);
+      else boostedB.push(f.name);
+    }
+  });
+
+  const events = {
+    scenario,
+    boostedA,
+    boostedB,
+    namesA: queueA.map(f => f.name),
+    namesB: queueB.map(f => f.name),
+    initialCountA,
+    initialCountB,
+    earlyMoments: [],   // primi scambi
+    midMoments: [],     // fase centrale
+    lateMoments: [],    // finale
+    firstBlood: null,
+    keyKOs: [],         // tutti i KO in ordine
+    momentum: null,     // chi ha preso il sopravvento a metà
+    lastStand: null,
+    survivorsA: [],
+    survivorsB: [],
+    totalRounds: 0
+  };
+
+  let round = 0;
+  const MAX_ROUNDS = 60;
+  let firstBloodTaken = false;
+  let momentumSet = false;
+
+  while (queueA.length > 0 && queueB.length > 0 && round < MAX_ROUNDS) {
+    round++;
+    const fA = queueA[0], fB = queueB[0];
+    const aFirst = fA.stats.velocita >= fB.stats.velocita;
+    const order = aFirst ? [[fA, fB, 'A'], [fB, fA, 'B']] : [[fB, fA, 'B'], [fA, fB, 'A']];
+
+    // Fase: early (primi 1/3), mid, late (ultimi 1/3 stimati)
+    const aliveRatio = (queueA.length + queueB.length) / (initialCountA + initialCountB);
+    let phase = 'mid';
+    if (aliveRatio > 0.75) phase = 'early';
+    else if (aliveRatio < 0.4) phase = 'late';
+
+    for (const [attacker, defender, team] of order) {
+      if (attacker.hp <= 0 || defender.hp <= 0) continue;
+
+      // Heal
+      if (attacker.ability.type === 'heal' && attacker.hp < attacker.maxHp && Math.random() < attacker.ability.chance) {
+        const healAmt = Math.round(attacker.maxHp * attacker.ability.magnitude);
+        attacker.hp = Math.min(attacker.hp + healAmt, attacker.maxHp);
+        const moment = { type: 'heal', name: attacker.name, ability: attacker.ability.name, team };
+        if (phase === 'early') events.earlyMoments.push(moment);
+        else if (phase === 'late') events.lateMoments.push(moment);
+        else events.midMoments.push(moment);
+      }
+
+      // Dodge
+      if (defender.ability.type === 'dodge' && Math.random() < defender.ability.chance) {
+        const moment = { type: 'dodge', name: defender.name, ability: defender.ability.name, vs: attacker.name, team: team === 'A' ? 'B' : 'A' };
+        if (phase === 'early') events.earlyMoments.push(moment);
+        else if (phase === 'late') events.lateMoments.push(moment);
+        else events.midMoments.push(moment);
+        continue;
+      }
+
+      let dmg = computeDamage(attacker, defender);
+
+      if (attacker.debuffed) {
+        dmg = Math.round(dmg * attacker.debuffValue);
+        attacker.debuffed = false;
+      }
+
+      // Shield
+      if (defender.ability.type === 'shield') {
+        dmg = Math.max(dmg - Math.round(dmg * defender.ability.chance), 2);
+        const moment = { type: 'shield', name: defender.name, ability: defender.ability.name, team: team === 'A' ? 'B' : 'A' };
+        if (phase === 'early') events.earlyMoments.push(moment);
+        else if (phase === 'late') events.lateMoments.push(moment);
+        else events.midMoments.push(moment);
+      }
+
+      // Burst
+      if (attacker.ability.type === 'burst' && Math.random() < attacker.ability.chance) {
+        dmg = Math.round(dmg * attacker.ability.magnitude);
+        const moment = { type: 'burst', name: attacker.name, ability: attacker.ability.name, vs: defender.name, team };
+        if (phase === 'early') events.earlyMoments.push(moment);
+        else if (phase === 'late') events.lateMoments.push(moment);
+        else events.midMoments.push(moment);
+      }
+
+      // Debuff
+      if (attacker.ability.type === 'debuff' && Math.random() < attacker.ability.chance) {
+        defender.debuffed = true;
+        defender.debuffValue = attacker.ability.magnitude;
+        const moment = { type: 'debuff', name: attacker.name, ability: attacker.ability.name, vs: defender.name, team };
+        if (phase === 'early') events.earlyMoments.push(moment);
+        else if (phase === 'late') events.lateMoments.push(moment);
+        else events.midMoments.push(moment);
+      }
+
+      defender.hp = Math.max(defender.hp - dmg, 0);
+
+      if (!firstBloodTaken && dmg > 18) {
+        firstBloodTaken = true;
+        events.firstBlood = { name: attacker.name, vs: defender.name, team };
+      }
+
+      if (defender.hp <= 0) {
+        events.keyKOs.push({
+          name: defender.name,
+          by: attacker.name,
+          teamFallen: team === 'A' ? 'B' : 'A',
+          remainingA: queueA.length - (defender === fA ? 1 : 0),
+          remainingB: queueB.length - (defender === fB ? 1 : 0)
+        });
+        if (queueA.length + queueB.length <= 3 && !events.lastStand) {
+          events.lastStand = { name: attacker.name, team };
+        }
+      }
+    }
+
+    if (fA.hp <= 0) queueA.shift();
+    if (fB.hp <= 0) queueB.shift();
+
+    // Momentum a metà scontro
+    if (!momentumSet && (queueA.length + queueB.length) <= (initialCountA + initialCountB) * 0.55) {
+      momentumSet = true;
+      if (queueA.length > queueB.length) events.momentum = 'A';
+      else if (queueB.length > queueA.length) events.momentum = 'B';
+      else events.momentum = 'even';
+    }
+  }
+
+  events.survivorsA = queueA.map(f => f.name);
+  events.survivorsB = queueB.map(f => f.name);
+  events.totalRounds = round;
+
+  let winner;
+  if (queueA.length > 0 && queueB.length === 0) winner = 'A';
+  else if (queueB.length > 0 && queueA.length === 0) winner = 'B';
+  else if (queueA.length === 0 && queueB.length === 0) winner = 'pareggio';
+  else {
+    const hpA = queueA.reduce((s, f) => s + f.hp, 0);
+    const hpB = queueB.reduce((s, f) => s + f.hp, 0);
+    winner = hpA === hpB ? 'pareggio' : (hpA > hpB ? 'A' : 'B');
+  }
+
+  return { events, winner };
+}
+
+
+// ---------- VARIANTI NARRATIVE ----------
+const NARR = {
+  apertura: [
+    (s) => `Lo scontro si svolge in ${s.nome}. ${s.atmosfera}`,
+    (s) => `Il teatro della battaglia è ${s.nome}. ${s.atmosfera}`,
+    (s) => `Tutto avviene tra ${s.nome}. ${s.atmosfera}`,
+    (s) => `Il campo scelto è ${s.nome}. ${s.atmosfera}`,
+    (s) => `Ci si ritrova in ${s.nome}. ${s.atmosfera}`
+  ],
+  effetto: [
+    (s) => `L'ambiente non è neutrale: ${s.effetto.charAt(0).toLowerCase() + s.effetto.slice(1)}`,
+    (s) => `Qui ${s.effetto.charAt(0).toLowerCase() + s.effetto.slice(1)}`,
+    (s) => `Le condizioni del luogo contano. ${s.effetto}`,
+    (s) => `Questo posto favorisce certi combattenti: ${s.effetto.charAt(0).toLowerCase() + s.effetto.slice(1)}`,
+    (s) => `Il terreno influenza tutto. ${s.effetto}`
+  ],
+  vantaggio: [
+    (names) => `A trarne beneficio sono soprattutto ${names}.`,
+    (names) => `Chi sa leggere il terreno — ${names} — se ne accorge subito.`,
+    (names) => `${names} sembrano muoversi come se questo posto fosse casa loro.`,
+    (names) => `Il vantaggio va a ${names}, che sfruttano meglio le condizioni.`,
+    (names) => `${names} sentono il posto dalla loro parte.`
+  ],
+  nessunoBoost: [
+    `Nessuno dei presenti riesce a piegare davvero l'ambiente a proprio favore.`,
+    `Il luogo resta ostile a entrambi gli schieramenti.`,
+    `Le condizioni restano imparziali: nessuno ha un vero vantaggio strutturale.`,
+    `L'ambiente non privilegia nessuno. È solo un altro ostacolo.`,
+    `Qui non ci sono favoritismi. Solo chi combatte meglio resterà in piedi.`
+  ],
+  presentazione: [
+    (a, b) => `Da una parte ${a}. Dall'altra ${b}. Non c'è spazio per esitazioni.`,
+    (a, b) => `Si fronteggiano ${a} e, di fronte a loro, ${b}.`,
+    (a, b) => `Due schieramenti si guardano: ${a} da un lato, ${b} dall'altro.`,
+    (a, b) => `${a} contro ${b}. Il confronto è inevitabile.`,
+    (a, b) => `Da un lato ${a}. Di fronte, ${b}. Basta un gesto per far scattare tutto.`
+  ],
+  firstBlood: [
+    (n, v) => `Il primo vero colpo lo porta ${n}: ${v} ne risente subito e lo scontro prende una direzione.`,
+    (n, v) => `${n} apre le danze con un attacco che lascia ${v} in difficoltà.`,
+    (n, v) => `È ${n} a spezzare il ghiaccio, colpendo ${v} con una forza che non lascia dubbi.`,
+    (n, v) => `${n} colpisce per primo. ${v} barcolla, e da lì in poi non c'è più ritorno.`,
+    (n, v) => `Il segnale d'inizio arriva da ${n}: un attacco netto su ${v} che cambia l'atmosfera.`
+  ],
+  ponte: [
+    `Per un momento il campo sembra fermarsi. Poi tutto riparte, più duro di prima.`,
+    `Il ritmo cambia. Chi era in vantaggio deve difenderlo; chi era indietro cerca un'apertura.`,
+    `La polvere si alza. I colpi diventano meno misurati, più disperati.`,
+    `Nessuno parla. Solo il suono degli impatti e il respiro di chi è ancora in piedi.`,
+    `Lo scontro si stringe. Ogni passo costa di più, ogni errore pesa di più.`,
+    `C'è un attimo di vuoto, poi la pressione torna. Nessuno vuole essere il prossimo a cadere.`,
+    `Il terreno è già segnato da ciò che è successo. E non è finita.`
+  ],
+  burst: [
+    (n, ab, v) => `${n} libera ${ab}. L'impatto su ${v} è pesante: per un attimo tutto sembra fermarsi.`,
+    (n, ab, v) => `Con ${ab}, ${n} cambia il ritmo. ${v} è costretto a subire una potenza difficile da contenere.`,
+    (n, ab, v) => `${n} non trattiene più nulla. ${ab} esplode contro ${v} e lascia un segno netto.`,
+    (n, ab, v) => `Quando ${n} attiva ${ab}, ${v} si ritrova al centro di una forza che non aveva previsto.`,
+    (n, ab, v) => `${ab} scatta nelle mani di ${n}. ${v} cerca di resistere, ma il colpo arriva intero.`,
+    (n, ab, v) => `${n} concentra tutto in ${ab}. L'aria trema intorno a ${v}.`
+  ],
+  dodge: [
+    (n, ab, v) => `${n} si sottrae al colpo di ${v} grazie a ${ab}. Quasi non sembra reale.`,
+    (n, ab, v) => `${ab} salva ${n}: il colpo di ${v} passa a vuoto, e per un secondo l'attaccante resta scoperto.`,
+    (n, ab, v) => `${n} legge l'attacco di ${v} e lo evita con ${ab}. Un movimento che vale quanto un contrattacco.`,
+    (n, ab, v) => `Il colpo di ${v} non trova bersaglio. ${n}, grazie a ${ab}, è già altrove.`,
+    (n, ab, v) => `${n} sfugge all'attacco di ${v}. ${ab} fa la differenza in una frazione di secondo.`
+  ],
+  shield: [
+    (n, ab) => `${n} regge. ${ab} assorbe ciò che avrebbe dovuto abbatterlo.`,
+    (n, ab) => `Sotto la pressione, ${n} non cede: ${ab} tiene, e lo scontro continua.`,
+    (n, ab) => `${ab} permette a ${n} di restare in piedi quando tutto sembrava già deciso.`,
+    (n, ab) => `Il colpo arriva, ma ${n} lo contiene con ${ab}. Non è ancora finita.`,
+    (n, ab) => `${n} si chiude dietro ${ab} e sopravvive a ciò che avrebbe messo a terra chiunque altro.`
+  ],
+  heal: [
+    (n, ab) => `${n} attiva ${ab}. Le ferite si richiudono e torna a essere una minaccia.`,
+    (n, ab) => `Proprio quando sembrava finito, ${n} usa ${ab} e ritrova forze che sembravano perse.`,
+    (n, ab) => `${ab} interviene: ${n} si rialza, più determinato di prima.`,
+    (n, ab) => `${n} non si arrende. Con ${ab} recupera e rientra nello scontro.`,
+    (n, ab) => `Il corpo di ${n} si ripara grazie a ${ab}. Chi pensava di averlo messo fuori deve ricredersi.`
+  ],
+  debuff: [
+    (n, ab, v) => `${n} colpisce non solo il corpo di ${v}, ma anche il suo equilibrio: ${ab} fa effetto.`,
+    (n, ab, v) => `Con ${ab}, ${n} spezza il ritmo di ${v}. Da quel momento l'avversario combatte in salita.`,
+    (n, ab, v) => `${n} impone ${ab}. ${v} ne risente: ogni movimento successivo pesa di più.`,
+    (n, ab, v) => `${ab} lascia ${v} destabilizzato. ${n} ha creato un'apertura e sa come usarla.`,
+    (n, ab, v) => `${n} usa ${ab} su ${v}: non è un colpo spettacolare, ma cambia le carte in tavola.`
+  ],
+  ko: [
+    (n, by) => `${n} non regge più. È ${by} a metterlo fuori gioco.`,
+    (n, by) => `Il colpo decisivo di ${by} lascia ${n} a terra, incapace di rialzarsi.`,
+    (n, by) => `${n} cede. ${by} ha trovato l'apertura e non l'ha lasciata scappare.`,
+    (n, by) => `Per ${n} è finita. ${by} chiude lo scambio con un colpo netto.`,
+    (n, by) => `${by} prevale. ${n} cade e non si rialza.`,
+    (n, by) => `Lo scontro tra ${by} e ${n} si chiude così: uno in piedi, l'altro a terra.`,
+    (n, by) => `${n} esce di scena sotto la pressione di ${by}.`
+  ],
+  dopoKO: [
+    `Il campo resta un attimo sospeso. Poi chi è ancora in piedi riprende a muoversi.`,
+    `Una presenza in meno. Lo spazio si allarga, ma la tensione non cala.`,
+    `Chi resta deve riorganizzarsi. Non c'è tempo per fermarsi a lungo.`,
+    `Il silenzio dura poco. Lo scontro continua, più concentrato di prima.`,
+    `Per un secondo nessuno attacca. Poi la battaglia riprende, senza pietà.`,
+    `Il vuoto lasciato si sente. Chi è rimasto sa che il prossimo colpo potrebbe essere decisivo.`,
+    `Nessuno celebra. Si va avanti.`,
+    `L'aria è più pesante. Chi è ancora in gioco non può permettersi distrazioni.`
+  ],
+  momentumFavor: [
+    (side) => `A questo punto ${side} ha preso il sopravvento. La pressione sta dalla loro parte.`,
+    (side) => `Lo scontro pende verso ${side}. Gli altri sono costretti a riorganizzarsi sotto fuoco.`,
+    (side) => `${side} impone il ritmo. Chi è rimasto dall'altra parte deve trovare una risposta, e presto.`,
+    (side) => `Il campo parla chiaro: ${side} sta dominando questa fase.`,
+    (side) => `${side} ha il controllo. L'altra parte combatte in salita.`
+  ],
+  momentumEven: [
+    `A metà scontro le forze restano equilibrate. Nessuno ha ancora il controllo pieno del campo.`,
+    `I numeri si sono assottigliati da entrambe le parti in modo simile. Tutto è ancora in bilico.`,
+    `Nessuno dei due schieramenti ha un chiaro vantaggio. Il risultato resta aperto.`,
+    `Finora nessuno ha preso il comando. Ogni colpo può ancora spostare tutto.`,
+    `L'equilibrio regge, ma è fragile. Basta poco per romperlo.`
+  ],
+  lastStand: [
+    (n) => `${n} resta quasi solo. Non c'è più margine di errore, eppure non indietreggia.`,
+    (n) => `Intorno a ${n} lo spazio si svuota. È l'ultimo a tenere la posizione.`,
+    (n) => `${n} si ritrova a combattere per due. L'ultimo baluardo di chi non vuole cedere.`,
+    (n) => `Resta ${n}. Solo, ma ancora in piedi, e ancora pericoloso.`,
+    (n) => `${n} non ha più alleati vicini. Decide di non mollare lo stesso.`
+  ],
+  chiusuraVittoria: [
+    (surv) => `Quando tutto si placa, restano in piedi solo ${surv}.`,
+    (surv) => `Il fumo si dirada. Sul campo: ${surv}.`,
+    (surv) => `Fine. Restano ${surv}, e nient'altro.`,
+    (surv) => `Lo scontro è finito. A reggere sono solo ${surv}.`,
+    (surv) => `Silenzio. Gli unici ancora in piedi sono ${surv}.`
+  ],
+  chiusuraPareggio: [
+    `Nessuno resta in piedi. Solo detriti, polvere e il silenzio di chi ha dato tutto.`,
+    `Lo scontro si esaurisce senza un vincitore chiaro. Il campo è vuoto di combattenti.`,
+    `Tutti a terra. Non c'è un trionfo, solo il peso di ciò che è successo.`,
+    `Nessun vincitore. Solo un campo devastato e il silenzio.`,
+    `È finita senza un trionfatore. Entrambi gli schieramenti sono a terra.`
+  ],
+  caduti: [
+    (lista) => `Sono caduti: ${lista}.`,
+    (lista) => `Non ce l'hanno fatta: ${lista}.`,
+    (lista) => `Restano a terra: ${lista}.`,
+    (lista) => `Fuori combattimento: ${lista}.`,
+    (lista) => `Non si rialzano: ${lista}.`
+  ]
+};
+
+// evita di riusare la stessa variante nella stessa battaglia
+const _usedNarr = new Set();
+function pickNarr(arr, ...args) {
+  const available = arr
+    .map((fn, i) => ({ fn, i }))
+    .filter(({ i }) => !_usedNarr.has(arr.toString().slice(0, 40) + ':' + i));
+  const pool = available.length ? available : arr.map((fn, i) => ({ fn, i }));
+  const choice = pool[Math.floor(Math.random() * pool.length)];
+  _usedNarr.add(arr.toString().slice(0, 40) + ':' + choice.i);
+  return typeof choice.fn === 'function' ? choice.fn(...args) : choice.fn;
+}
+function resetNarrMemory() {
+  _usedNarr.clear();
+}
+
+function momentToText(m) {
+  if (m.type === 'burst') return pickNarr(NARR.burst, m.name, m.ability, m.vs);
+  if (m.type === 'dodge') return pickNarr(NARR.dodge, m.name, m.ability, m.vs);
+  if (m.type === 'shield') return pickNarr(NARR.shield, m.name, m.ability);
+  if (m.type === 'heal') return pickNarr(NARR.heal, m.name, m.ability);
+  if (m.type === 'debuff') return pickNarr(NARR.debuff, m.name, m.ability, m.vs);
+  return null;
+}
+
+function tagFor(m) {
+  return m.team === 'A' ? 'a' : 'b';
+}
+
+// ---------- COSTRUZIONE DEL RIASSUNTO (ritmo naturale, zero meta) ----------
+function buildSummary(events, winner) {
+  resetNarrMemory();
+  const s = events.scenario;
+  const lines = [];
+  const usedKO = new Set();
+
+  function pushKO(ko) {
+    if (!ko || usedKO.has(ko.name)) return;
+    usedKO.add(ko.name);
+    lines.push({ tag: 'ko', text: pickNarr(NARR.ko, ko.name, ko.by) });
+    // respiro dopo ogni KO
+    if (Math.random() < 0.75) {
+      lines.push({ tag: 'narr', text: pickNarr(NARR.dopoKO) });
+    }
+  }
+
+  function pushMoments(list, max) {
+    list.slice(0, max).forEach(m => {
+      const t = momentToText(m);
+      if (t) lines.push({ tag: tagFor(m), text: t });
+    });
+  }
+
+  // ——— APERTURA ———
+  lines.push({ tag: 'scene', text: pickNarr(NARR.apertura, s) });
+  lines.push({ tag: 'narr', text: pickNarr(NARR.effetto, s) });
+
+  if (events.boostedA.length || events.boostedB.length) {
+    const names = [...events.boostedA, ...events.boostedB];
+    lines.push({ tag: 'narr', text: pickNarr(NARR.vantaggio, names.join(', ')) });
+  } else {
+    lines.push({ tag: 'narr', text: pickNarr(NARR.nessunoBoost) });
+  }
+
+  lines.push({
+    tag: 'narr',
+    text: pickNarr(NARR.presentazione, events.namesA.join(', '), events.namesB.join(', '))
+  });
+
+  // ——— PRIMI SCAMBI ———
+  if (events.firstBlood) {
+    const tag = events.firstBlood.team === 'A' ? 'a' : 'b';
+    lines.push({ tag, text: pickNarr(NARR.firstBlood, events.firstBlood.name, events.firstBlood.vs) });
+  }
+
+  pushMoments(events.earlyMoments, 3);
+
+  // primo KO isolato
+  if (events.keyKOs[0]) pushKO(events.keyKOs[0]);
+
+  // ——— SVILUPPO ———
+  lines.push({ tag: 'narr', text: pickNarr(NARR.ponte) });
+
+  // momentum senza "Squadra A/B": usa i nomi
+  if (events.momentum === 'A') {
+    const side = events.namesA.length <= 2
+      ? events.namesA.join(' e ')
+      : events.namesA.slice(0, 2).join(', ') + ' e i loro alleati';
+    lines.push({ tag: 'a', text: pickNarr(NARR.momentumFavor, side) });
+  } else if (events.momentum === 'B') {
+    const side = events.namesB.length <= 2
+      ? events.namesB.join(' e ')
+      : events.namesB.slice(0, 2).join(', ') + ' e i loro alleati';
+    lines.push({ tag: 'b', text: pickNarr(NARR.momentumFavor, side) });
+  } else if (events.momentum === 'even') {
+    lines.push({ tag: 'narr', text: pickNarr(NARR.momentumEven) });
+  }
+
+  // interleave: momento → KO → momento → KO (mai 3 KO di fila)
+  const midMoments = events.midMoments.slice(0, 4);
+  const midKOs = events.keyKOs.slice(1, Math.min(events.keyKOs.length - 1, 5));
+  const midSlots = Math.max(midMoments.length, midKOs.length);
+  for (let i = 0; i < midSlots; i++) {
+    if (midMoments[i]) {
+      const t = momentToText(midMoments[i]);
+      if (t) lines.push({ tag: tagFor(midMoments[i]), text: t });
+    }
+    if (midKOs[i]) pushKO(midKOs[i]);
+  }
+
+  // ——— FINALE ———
+  lines.push({ tag: 'narr', text: pickNarr(NARR.ponte) });
+
+  pushMoments(events.lateMoments, 3);
+
+  // ultimi KO, uno alla volta con respiro
+  events.keyKOs.filter(ko => !usedKO.has(ko.name)).forEach(ko => pushKO(ko));
+
+  if (events.lastStand) {
+    const tag = events.lastStand.team === 'A' ? 'a' : 'b';
+    lines.push({ tag, text: pickNarr(NARR.lastStand, events.lastStand.name) });
+  }
+
+  // ——— CHIUSURA (niente numeri, niente "Squadra X") ———
+  if (winner === 'A' || winner === 'B') {
+    const survList = winner === 'A' ? events.survivorsA : events.survivorsB;
+    const surv = survList.length ? survList.join(', ') : 'nessuno';
+    lines.push({
+      tag: winner === 'A' ? 'a' : 'b',
+      text: pickNarr(NARR.chiusuraVittoria, surv)
+    });
+  } else {
+    lines.push({ tag: 'ko', text: pickNarr(NARR.chiusuraPareggio) });
+  }
+
+  const fallen = [
+    ...events.namesA.filter(n => !events.survivorsA.includes(n)),
+    ...events.namesB.filter(n => !events.survivorsB.includes(n))
+  ];
+  if (fallen.length) {
+    lines.push({ tag: 'narr', text: pickNarr(NARR.caduti, fallen.join(', ')) });
+  }
+
+  return lines;
+}
+
+
+
+// ---------- ARCHIVIO ----------
+function saveToArchive(winner, teamAIds, teamBIds, rounds) {
+  const entry = {
+    date: new Date().toLocaleString('it-IT'),
+    winner,
+    teamA: teamAIds.map(id => (findChar(id)||{}).name || id),
+    teamB: teamBIds.map(id => (findChar(id)||{}).name || id),
+    rounds,
+    universe: currentUniverse
+  };
+  let archive = [];
+  try { archive = JSON.parse(localStorage.getItem('combatArchive') || '[]'); } catch(e) {}
+  archive.unshift(entry);
+  if (archive.length > 20) archive = archive.slice(0, 20);
+  localStorage.setItem('combatArchive', JSON.stringify(archive));
+  renderArchive();
+}
+
+
+function renderSynergyGuide() {
+  const box = document.getElementById('synergyGuide');
+  if (!box) return;
+  box.innerHTML = '';
+  const allChars = [...CHARACTERS, ...POKEMON, ...NINTENDO];
+  const nameOf = id => (allChars.find(c => c.id === id) || {}).name || id;
+  SYNERGIES.forEach(syn => {
+    const card = document.createElement('div');
+    card.className = 'syn-card';
+    const members = syn.members.map(nameOf).join(', ');
+    const partialKeys = Object.entries(syn.partial).map(([k,v]) => k+'+'+v).join(', ');
+    const fullKeys = Object.entries(syn.full).map(([k,v]) => k+'+'+v).join(', ');
+    let rule;
+    if (syn.members.length <= 2) {
+      rule = 'Con entrambi: ' + fullKeys;
+    } else {
+      rule = 'Da ' + syn.min + ': ' + partialKeys + ' · Tutti (' + syn.members.length + '): ' + fullKeys;
+    }
+    card.innerHTML = '<h4>★ '+syn.name+'</h4>' +
+      '<div class="syn-members">'+members+'</div>' +
+      '<div class="syn-rule">'+rule+'</div>';
+    box.appendChild(card);
+  });
+}
+
+function renderArchive() {
+  const archiveSection = document.getElementById('archiveSection');
+  const archiveGrid = document.getElementById('archiveGrid');
+  if (!archiveSection || !archiveGrid) return;
+  let archive = [];
+  try { archive = JSON.parse(localStorage.getItem('combatArchive') || '[]'); } catch(e) {}
+  archiveSection.style.display = 'block';
+  if (!archive.length) {
+    archiveGrid.innerHTML = '<div class="archive-empty">Nessuna battaglia ancora. Dopo il primo scontro comparirà qui lo storico (salvato su questo dispositivo).</div>';
+    return;
+  }
+  archiveGrid.innerHTML = '';
+  archive.forEach(entry => {
+    const card = document.createElement('div');
+    card.className = 'archive-card';
+    const winnerClass = entry.winner === 'A' ? 'win-a' : (entry.winner === 'B' ? 'win-b' : 'win-draw');
+    const winnerText = entry.winner === 'pareggio' ? 'Pareggio' : ('Squadra ' + entry.winner);
+    card.innerHTML = '<div class="arc-date">' + entry.date + (entry.rounds ? ' · ' + entry.rounds + ' round' : '') + (entry.universe ? ' · ' + entry.universe : '') + '</div>' +
+      '<div class="arc-teams">A: ' + (entry.teamA||[]).join(', ') + '</div>' +
+      '<div class="arc-teams">B: ' + (entry.teamB||[]).join(', ') + '</div>' +
+      '<div class="arc-winner"><span>Vincitore</span><b class="' + winnerClass + '">' + winnerText + '</b></div>';
+    archiveGrid.appendChild(card);
+  });
+}
+
+
+
+// ---------- SFIDA 2 GIOCATORI (stanza PeerJS, codice fisso) ----------
+let appMode = 'free';
+let vsRole = null;
+let vsSize = 3;
+let vsBudgetChoice = 'auto';
+let vsState = null;
+let vsPeer = null;
+let vsConn = null;
+let vsRoomId = null;
+
+function bansForSize(size){
+  if (size <= 4) return 1;
+  return 2;
+}
+function defaultBudget(size){
+  return ({1:51, 2:78, 3:110, 4:145, 5:180})[size] || 110;
+}
+function activeBudget(state){
+  if (!state) return defaultBudget(vsSize);
+  return state.budget || defaultBudget(state.size);
+}
+function teamCost(ids){
+  return (ids||[]).reduce((s,id) => {
+    const c = findChar(id);
+    return s + (c ? totalPower(c) : 0);
+  }, 0);
+}
+function snakeOrder(size){
+  const fixed = [];
+  for (let round = 0; round < size; round++) {
+    if (round % 2 === 0) {
+      fixed.push('host');
+      if (fixed.length < size * 2) fixed.push('guest');
+    } else {
+      fixed.push('guest');
+      if (fixed.length < size * 2) fixed.push('host');
+    }
+  }
+  return fixed.slice(0, size * 2);
+}
+function newVsState(){
+  const bud = vsBudgetChoice === 'auto' ? defaultBudget(vsSize) : parseInt(vsBudgetChoice, 10);
+  return {
+    v: 1,
+    phase: 'ban_host',
+    universe: currentUniverse === 'multiverso' ? 'multiverso' : currentUniverse,
+    size: vsSize,
+    budget: bud,
+    bansEach: bansForSize(vsSize),
+    hostBans: [],
+    guestBans: [],
+    hostPicks: [],
+    guestPicks: [],
+    pickIndex: 0,
+    hostReady: false,
+    guestReady: false,
+    seed: (Date.now() % 1000000) ^ Math.floor(Math.random()*99991),
+    winner: null
+  };
+}
+function vsAllBanned(){
+  if (!vsState) return new Set();
+  return new Set([...(vsState.hostBans||[]), ...(vsState.guestBans||[])]);
+}
+function vsAllTaken(){
+  if (!vsState) return new Set();
+  return new Set([...(vsState.hostPicks||[]), ...(vsState.guestPicks||[]), ...vsAllBanned()]);
+}
+function vsWhosePick(){
+  if (!vsState || vsState.phase !== 'pick') return null;
+  return snakeOrder(vsState.size)[vsState.pickIndex] || null;
+}
+function seededRandom(seed){
+  let s = seed % 2147483647;
+  if (s <= 0) s += 2147483646;
+  return function(){
+    s = s * 16807 % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
+
+function setConnStatus(msg, ok){
+  const el = document.getElementById('vsConnStatus');
+  if (!el) return;
+  el.innerHTML = msg;
+  el.style.color = ok ? 'var(--hero)' : 'var(--amber)';
+}
+
+function peerOptions(){
+  return {
+    debug: 1,
+    secure: true,
+    config: {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:openrelay.metered.ca:80' },
+        { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+        { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
+        { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' }
+      ]
+    }
+  };
+}
+
+function wireConn(conn){
+  vsConn = conn;
+  conn.on('data', (data) => {
+    if (!data) return;
+    if (data.type === 'hello' && vsRole === 'host') { broadcastVs(); return; }
+    if (data.type !== 'state' || !data.state) return;
+    vsState = data.state;
+    if (data.state.universe && UNIVERSES[data.state.universe]) {
+      currentUniverse = data.state.universe;
+      try { renderUniverses(); updateFilterLabels(); refreshAll(); } catch(e) {}
+    }
+    renderVs();
+    setConnStatus('Live OK · stanza <strong>' + (vsRoomId||'') + '</strong>', true);
+  });
+  conn.on('open', () => {
+    setConnStatus('Live collegato · <strong>' + (vsRoomId||'') + '</strong>', true);
+    if (vsRole === 'host' && vsState) setTimeout(broadcastVs, 150);
+    if (vsRole === 'guest') {
+      try { conn.send({ type: 'hello' }); } catch(e) {}
+    }
+  });
+  conn.on('close', () => setConnStatus('Live disconnesso — Entra di nuovo o usa il link sotto', false));
+  conn.on('error', (err) => setConnStatus('Errore canale: ' + (err.message || err), false));
+}
+
+function broadcastVs(){
+  if (!vsState || !vsConn || !vsConn.open) return;
+  try { vsConn.send({ type: 'state', state: vsState }); } catch(e) {}
+}
+
+function afterVsMove(){
+  renderVs();
+  broadcastVs();
+  // aggiorna anche il link fallback
+  const box = document.getElementById('vsCodeBox');
+  if (box && vsState) {
+    try {
+      const payload = btoa(unescape(encodeURIComponent(JSON.stringify(vsState))));
+      const base = (location.href || '').split('#')[0].split('?')[0];
+      box.value = base + '#vs=' + payload;
+    } catch(e) {}
+  }
+}
+
+function destroyPeer(){
+  try { if (vsConn) vsConn.close(); } catch(e) {}
+  try { if (vsPeer) vsPeer.destroy(); } catch(e) {}
+  vsConn = null;
+  vsPeer = null;
+}
+
+function startAsHost(){
+  destroyPeer();
+  vsRole = 'host';
+  vsState = newVsState();
+  const input = document.getElementById('vsRoomInput');
+  if (typeof Peer === 'undefined') {
+    setConnStatus('PeerJS non caricato. Usa la modalità <strong>link</strong> sotto.', false);
+    afterVsMove();
+    return;
+  }
+  setConnStatus('Apertura stanza live…', false);
+  // ID automatico (più affidabile del custom sul cloud PeerJS)
+  try {
+    vsPeer = new Peer(peerOptions());
+  } catch (e) {
+    setConnStatus('Impossibile avviare PeerJS. Usa il link sotto.', false);
+    afterVsMove();
+    return;
+  }
+  const timeout = setTimeout(() => {
+    if (!vsRoomId) {
+      setConnStatus('Timeout rete PeerJS. Usa <strong>Copia link stato</strong> qui sotto (più affidabile).', false);
+    }
+  }, 12000);
+  vsPeer.on('open', (id) => {
+    clearTimeout(timeout);
+    vsRoomId = id;
+    if (input) input.value = id;
+    setConnStatus('Stanza live pronta. Codice: <strong>' + id + '</strong> — copialo e mandalo <em>una volta</em>. Se l\'altro non entra in 15s, usate i link.', true);
+    afterVsMove();
+  });
+  vsPeer.on('connection', (conn) => {
+    wireConn(conn);
+    setConnStatus('Ospite collegato in live ✓', true);
+    setTimeout(broadcastVs, 200);
+  });
+  vsPeer.on('error', (err) => {
+    const t = (err && err.type) || '';
+    const m = (err && err.message) || String(err);
+    setConnStatus('Network PeerJS (' + t + '). Passa ai <strong>link</strong> sotto: Copia link stato → mandalo → l\'altro Applica link.', false);
+    console.warn('Peer error', err);
+  });
+  renderVs();
+}
+
+function joinAsGuest(){
+  const input = document.getElementById('vsRoomInput');
+  const id = (input && input.value || '').trim();
+  if (!id) { alert('Incolla il codice stanza dell\'host'); return; }
+  destroyPeer();
+  vsRole = 'guest';
+  vsRoomId = id;
+  if (typeof Peer === 'undefined') {
+    setConnStatus('PeerJS non caricato. Usa Applica link sotto.', false);
+    return;
+  }
+  setConnStatus('Connessione a ' + id + '…', false);
+  try {
+    vsPeer = new Peer(peerOptions());
+  } catch (e) {
+    setConnStatus('PeerJS non disponibile. Usa i link.', false);
+    return;
+  }
+  const timeout = setTimeout(() => {
+    setConnStatus('Connessione lenta/fallita. Chiedi all\'host il <strong>link stato</strong> e premi Applica link.', false);
+  }, 15000);
+  vsPeer.on('open', () => {
+    const conn = vsPeer.connect(id, { reliable: true });
+    wireConn(conn);
+    conn.on('open', () => clearTimeout(timeout));
+  });
+  vsPeer.on('error', (err) => {
+    setConnStatus('Network: ' + ((err && err.type) || err) + ' — usate i link sotto.', false);
+  });
+}
+
+function encodeVs(state){
+  try { return btoa(unescape(encodeURIComponent(JSON.stringify(state)))); }
+  catch(e) { return ''; }
+}
+function decodeVs(code){
+  try { return JSON.parse(decodeURIComponent(escape(atob(String(code).trim())))); }
+  catch(e) {
+    try { return JSON.parse(atob(String(code).trim())); } catch(e2) { return null; }
+  }
+}
+function applyVsLink(raw){
+  if (!raw) return false;
+  let code = String(raw).trim().replace(/[?&#]+$/, '');
+  const m = code.match(/#vs=([A-Za-z0-9+/=]+)/);
+  if (m) code = m[1];
+  const st = decodeVs(code);
+  if (!st || !st.phase) return false;
+  vsState = st;
+  if (!vsRole) vsRole = 'guest';
+  if (st.universe && UNIVERSES[st.universe]) {
+    currentUniverse = st.universe;
+    try { renderUniverses(); updateFilterLabels(); refreshAll(); } catch(e) {}
+  }
+  renderVs();
+  return true;
+}
+
+function renderVs(){
+  const status = document.getElementById('vsStatus');
+  const hostList = document.getElementById('vsHostList');
+  const guestList = document.getElementById('vsGuestList');
+  const pool = document.getElementById('vsDraftPool');
+  const fightB = document.getElementById('vsFightBtn');
+  const copyB = document.getElementById('vsCopyRoomBtn');
+  const hint = document.getElementById('vsUniverseHint');
+  if (!status) return;
+
+  if (hint) hint.textContent = (UNIVERSES[currentUniverse]||{}).label + ' — scegli l\'universo, poi Crea stanza';
+  if (copyB) copyB.disabled = !vsRoomId;
+
+  if (!vsState) {
+    status.innerHTML = 'Host: scegli formato/budget/universo → <strong>Crea stanza</strong> → manda solo il <strong>codice</strong>. Ospite: scrive il codice → <strong>Entra nella stanza</strong>. Poi le mosse si aggiornano da sole.';
+    if (hostList) hostList.innerHTML = '';
+    if (guestList) guestList.innerHTML = '';
+    if (pool) pool.innerHTML = '';
+    if (fightB) fightB.disabled = true;
+    const readyB = document.getElementById('vsReadyBtn');
+    if (readyB) readyB.disabled = true;
+    return;
+  }
+
+  const bothReady = !!(vsState.hostReady && vsState.guestReady);
+  if (fightB) fightB.disabled = !(vsState.phase === 'ready' && bothReady) && vsState.phase !== 'done';
+  const readyB = document.getElementById('vsReadyBtn');
+  if (readyB) {
+    const iAmReady = vsRole === 'host' ? vsState.hostReady : (vsRole === 'guest' ? vsState.guestReady : false);
+    readyB.disabled = vsState.phase !== 'ready' || !vsRole || iAmReady;
+    readyB.textContent = iAmReady ? 'Sei pronto ✓' : 'Sono pronto';
+  }
+
+  const nameOf = id => (findChar(id)||{}).name || id;
+  if (hostList) {
+    hostList.innerHTML = '';
+    (vsState.hostBans||[]).forEach(id => { const li = document.createElement('li'); li.textContent = '🚫 ' + nameOf(id); hostList.appendChild(li); });
+    (vsState.hostPicks||[]).forEach(id => { const li = document.createElement('li'); li.textContent = '✓ ' + nameOf(id); hostList.appendChild(li); });
+  }
+  if (guestList) {
+    guestList.innerHTML = '';
+    (vsState.guestBans||[]).forEach(id => { const li = document.createElement('li'); li.textContent = '🚫 ' + nameOf(id); guestList.appendChild(li); });
+    (vsState.guestPicks||[]).forEach(id => { const li = document.createElement('li'); li.textContent = '✓ ' + nameOf(id); guestList.appendChild(li); });
+  }
+
+  const bud = activeBudget(vsState);
+  const costH = teamCost(vsState.hostPicks);
+  const costG = teamCost(vsState.guestPicks);
+  let msg = 'Formato <strong>' + vsState.size + 'v' + vsState.size + '</strong> · Budget <strong>' + bud + '</strong> · <strong>' + vsState.universe + '</strong> · Sei <strong>' + (vsRole||'—') + '</strong><br>';
+  msg += 'Punti Host <strong>' + costH + '/' + bud + '</strong> · Ospite <strong>' + costG + '/' + bud + '</strong><br>';
+  const be = vsState.bansEach;
+  if (vsState.phase === 'ban_host') {
+    msg += vsRole === 'host' ? 'Tocca ' + be + ' da <strong>bannare</strong>.' : 'In attesa del ban host…';
+  } else if (vsState.phase === 'ban_guest') {
+    msg += vsRole === 'guest' ? 'Tocca ' + be + ' da <strong>bannare</strong>.' : 'In attesa del ban ospite…';
+  } else if (vsState.phase === 'pick') {
+    const who = vsWhosePick();
+    msg += 'Draft: tocca a <strong>' + who + '</strong>. ' + (who === vsRole ? 'Scegli un personaggio.' : 'Aspetta…');
+    msg += ' (' + (vsState.pickIndex+1) + '/' + (vsState.size*2) + ')';
+  } else if (vsState.phase === 'ready') {
+    const hr = vsState.hostReady ? '✓' : '…';
+    const gr = vsState.guestReady ? '✓' : '…';
+    msg += 'Pronti — Host <strong>' + hr + '</strong> · Ospite <strong>' + gr + '</strong>. ';
+    msg += (bothReady ? 'Potete <strong>Avviare lo scontro</strong>.' : 'Premi <strong>Sono pronto</strong>.');
+  } else if (vsState.phase === 'done') {
+    msg += 'Finito. Vincitore: <strong>' + (vsState.winner||'?') + '</strong>';
+  }
+  status.innerHTML = msg;
+
+  if (pool) {
+    pool.innerHTML = '';
+    currentUniverse = vsState.universe;
+    const chars = (UNIVERSES[vsState.universe]||{}).characters || [];
+    const banned = vsAllBanned();
+    const taken = new Set([...(vsState.hostPicks||[]), ...(vsState.guestPicks||[])]);
+    const canAct = (
+      (vsState.phase === 'ban_host' && vsRole === 'host' && (vsState.hostBans||[]).length < vsState.bansEach) ||
+      (vsState.phase === 'ban_guest' && vsRole === 'guest' && (vsState.guestBans||[]).length < vsState.bansEach) ||
+      (vsState.phase === 'pick' && vsWhosePick() === vsRole)
+    );
+    const myPicks = vsRole === 'host' ? (vsState.hostPicks||[]) : (vsState.guestPicks||[]);
+    const myCost = teamCost(myPicks);
+    chars.forEach(c => {
+      const card = document.createElement('div');
+      card.className = 'draft-card';
+      const cost = totalPower(c);
+      if (banned.has(c.id)) card.classList.add('banned');
+      else if (taken.has(c.id)) card.classList.add('taken');
+      const unaffordable = vsState.phase === 'pick' && vsWhosePick() === vsRole && (myCost + cost > bud);
+      if (unaffordable) card.classList.add('taken');
+      let tier = cost >= 46 ? 'ELITE' : (cost >= 40 ? 'alto' : (cost <= 32 ? 'agile' : ''));
+      card.innerHTML = '<div class="dn">' + (c.icon||'') + ' ' + c.name + '</div><div style="color:var(--amber);font-size:10px;margin-top:2px">' + cost + ' pt' + (tier ? ' · ' + tier : '') + '</div>';
+      if (canAct && !banned.has(c.id) && !taken.has(c.id) && !unaffordable) {
+        card.addEventListener('click', () => vsSelect(c.id));
+      }
+      pool.appendChild(card);
+    });
+  }
+}
+
+function vsSelect(id){
+  if (!vsState || !vsRole) return;
+  if (vsState.phase === 'ban_host' && vsRole === 'host') {
+    if (vsState.hostBans.includes(id) || vsState.hostBans.length >= vsState.bansEach) return;
+    vsState.hostBans.push(id);
+    if (vsState.hostBans.length >= vsState.bansEach) vsState.phase = 'ban_guest';
+  } else if (vsState.phase === 'ban_guest' && vsRole === 'guest') {
+    if (vsState.guestBans.includes(id) || vsState.hostBans.includes(id) || vsState.guestBans.length >= vsState.bansEach) return;
+    vsState.guestBans.push(id);
+    if (vsState.guestBans.length >= vsState.bansEach) vsState.phase = 'pick';
+  } else if (vsState.phase === 'pick' && vsWhosePick() === vsRole) {
+    if (vsAllTaken().has(id)) return;
+    const c = findChar(id);
+    if (!c) return;
+    const picks = vsRole === 'host' ? vsState.hostPicks : vsState.guestPicks;
+    if (teamCost(picks) + totalPower(c) > activeBudget(vsState)) {
+      alert('Budget insufficiente');
+      return;
+    }
+    if (vsRole === 'host') vsState.hostPicks.push(id);
+    else vsState.guestPicks.push(id);
+    vsState.pickIndex++;
+    if (vsState.pickIndex >= vsState.size * 2) {
+      vsState.phase = 'ready';
+      vsState.hostReady = false;
+      vsState.guestReady = false;
+    }
+  } else return;
+  afterVsMove();
+}
+
+function setAppMode(mode){
+  appMode = mode;
+  document.getElementById('modeFree').classList.toggle('active', mode==='free');
+  document.getElementById('modeVs').classList.toggle('active', mode==='vs');
+  const vsSec = document.getElementById('vsSection');
+  if (vsSec) vsSec.classList.toggle('hidden', mode!=='vs');
+  // hide free team/fight when in vs? keep roster visible for browsing - hide only fight teams
+  const freeIds = ['teamAList','fightBtn'];
+  document.querySelectorAll('main > section').forEach(sec => {
+    if (sec.id === 'vsSection' || sec.id === 'archiveSection' || sec.id === 'results') return;
+    // keep universe + synergies + roster visible always; hide squadre section in vs
+    const title = sec.querySelector('.section-title');
+    if (title && title.textContent.indexOf('Squadre') === 0) {
+      sec.style.display = mode === 'vs' ? 'none' : '';
+    }
+  });
+  if (mode === 'vs') renderVs();
+}
+
+document.getElementById('modeFree').addEventListener('click', () => setAppMode('free'));
+document.getElementById('modeVs').addEventListener('click', () => setAppMode('vs'));
+
+document.querySelectorAll('.size-btn[data-size]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.size-btn[data-size]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    vsSize = parseInt(btn.dataset.size, 10);
+  });
+});
+document.querySelectorAll('.budget-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.budget-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    vsBudgetChoice = btn.dataset.budget;
+  });
+});
+
+document.getElementById('vsShareBtn').addEventListener('click', async () => {
+  if (!vsState) { alert('Nessuna sfida attiva'); return; }
+  afterVsMove();
+  const box = document.getElementById('vsCodeBox');
+  const link = box ? box.value : '';
+  try {
+    await navigator.clipboard.writeText(link);
+    setConnStatus('Link copiato — mandalo all\'altro (fallback senza live)', true);
+  } catch(e) { alert('Copia il link dalla casella'); }
+});
+document.getElementById('vsApplyLinkBtn').addEventListener('click', () => {
+  const box = document.getElementById('vsCodeBox');
+  if (!applyVsLink(box && box.value)) alert('Link non valido');
+  else setConnStatus('Stato applicato da link', true);
+});
+document.getElementById('vsCreateBtn').addEventListener('click', () => startAsHost());
+document.getElementById('vsJoinBtn').addEventListener('click', () => joinAsGuest());
+document.getElementById('vsCopyRoomBtn').addEventListener('click', async () => {
+  if (!vsRoomId) return;
+  try {
+    await navigator.clipboard.writeText(vsRoomId);
+    setConnStatus('Codice <strong>' + vsRoomId + '</strong> copiato — mandalo una sola volta', true);
+  } catch(e) {
+    alert('Codice: ' + vsRoomId);
+  }
+});
+document.getElementById('vsResetBtn').addEventListener('click', () => {
+  destroyPeer();
+  vsState = null;
+  vsRole = null;
+  vsRoomId = null;
+  const input = document.getElementById('vsRoomInput');
+  if (input) input.value = '';
+  setConnStatus('Non connesso', false);
+  renderVs();
+});
+document.getElementById('vsReadyBtn').addEventListener('click', () => {
+  if (!vsState || vsState.phase !== 'ready' || !vsRole) return;
+  if (vsRole === 'host') vsState.hostReady = true;
+  else if (vsRole === 'guest') vsState.guestReady = true;
+  afterVsMove();
+});
+
+document.getElementById('vsFightBtn').addEventListener('click', () => {
+  if (!vsState || (vsState.phase !== 'ready' && vsState.phase !== 'done')) return;
+  if (vsState.phase === 'ready' && !(vsState.hostReady && vsState.guestReady)) {
+    alert('Aspetta che entrambi siano pronti (e aggiorna il codice).');
+    return;
+  }
+  if (vsState.hostPicks.length !== vsState.size || vsState.guestPicks.length !== vsState.size) {
+    alert('Squadre incomplete');
+    return;
+  }
+  // Seeded scenario pick for both devices same result
+  const rng = seededRandom(vsState.seed);
+  const _MathRandom = Math.random;
+  Math.random = rng;
+  try {
+    currentUniverse = vsState.universe;
+    const { events, winner } = simulateBattle(vsState.hostPicks, vsState.guestPicks);
+    const summary = buildSummary(events, winner);
+    logBox.innerHTML = '';
+    summary.forEach((entry, i) => {
+      const line = document.createElement('div');
+      line.className = 'log-line ' + entry.tag;
+      line.textContent = entry.text;
+      line.style.animationDelay = (Math.min(i, 30) * 70) + 'ms';
+      logBox.appendChild(line);
+    });
+    winnerBanner.innerHTML = '';
+    const banner = document.createElement('div');
+    if (winner === 'pareggio') {
+      banner.className = 'winner-banner';
+      banner.innerHTML = '<h2>PAREGGIO</h2>';
+    } else {
+      banner.className = 'winner-banner ' + winner.toLowerCase();
+      const label = winner === 'A' ? 'HOST' : 'OSPITE';
+      banner.innerHTML = '<h2>VINCE ' + label + '</h2>';
+    }
+    winnerBanner.appendChild(banner);
+    vsState.phase = 'done';
+    vsState.winner = winner === 'A' ? 'Host' : (winner === 'B' ? 'Ospite' : 'Pareggio');
+    saveToArchive(winner, vsState.hostPicks, vsState.guestPicks, events.totalRounds);
+    resultsSection.style.display = 'block';
+    resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    renderVs();
+  } finally {
+    Math.random = _MathRandom;
+  }
+});
+
+
+fightBtn.addEventListener('click', () => {
+  const teamAIds = Object.keys(assignment).filter(id => assignment[id] === 'A');
+  const teamBIds = Object.keys(assignment).filter(id => assignment[id] === 'B');
+  const { events, winner } = simulateBattle(teamAIds, teamBIds);
+  const summary = buildSummary(events, winner);
+
+  logBox.innerHTML = '';
+  summary.forEach((entry, i) => {
+    const line = document.createElement('div');
+    line.className = 'log-line ' + entry.tag;
+    line.textContent = entry.text;
+    line.style.animationDelay = (Math.min(i, 30) * 70) + 'ms';
+    logBox.appendChild(line);
+  });
+
+  winnerBanner.innerHTML = '';
+  const banner = document.createElement('div');
+  if (winner === 'pareggio') {
+    banner.className = 'winner-banner';
+    banner.innerHTML = '<h2>PAREGGIO</h2>';
+  } else {
+    banner.className = 'winner-banner ' + winner.toLowerCase();
+    banner.innerHTML = `<h2>VINCE SQUADRA ${winner}</h2>`;
+  }
+  winnerBanner.appendChild(banner);
+
+  saveToArchive(winner, teamAIds, teamBIds, events.totalRounds);
+  resultsSection.style.display = 'block';
+  resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  Object.keys(assignment).forEach(k => delete assignment[k]);
+  resultsSection.style.display = 'none';
+  refreshAll();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+const clearBtn = document.getElementById('clearArchiveBtn');
+if (clearBtn) clearBtn.addEventListener('click', () => {
+  localStorage.removeItem('combatArchive');
+  renderArchive();
+});
+
+const synergyToggle = document.getElementById('synergyToggle');
+const synergyGuideEl = document.getElementById('synergyGuide');
+if (synergyToggle && synergyGuideEl) {
+  synergyToggle.addEventListener('click', () => {
+    const open = synergyGuideEl.classList.toggle('open');
+    synergyToggle.classList.toggle('open', open);
+    synergyToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    synergyToggle.querySelector('span').textContent = open ? 'Nascondi elenco sinergie' : 'Mostra elenco sinergie';
+  });
+}
+
+renderUniverses();
+updateFilterLabels();
+renderSynergyGuide();
+refreshAll();
+renderArchive();
+</script>
+</body>
+</html>
+
