@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Combat Simulator — Multiverso</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./src/config.js"></script>
+<script src="./src/data/gameData.js"></script>
+<script src="./src/core/rules/combatRules.js"></script>
+<script src="./src/core/combat/engine.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -2768,10 +2772,12 @@ let vsLastJson = '';
 //      create policy "public update" on vs_rooms for update using (true);
 // 3) Database > Replication: abilita Realtime sulla tabella vs_rooms
 //    (oppure: alter publication supabase_realtime add table vs_rooms;)
-// 4) Project Settings > API: incolla qui sotto Project URL e anon public key
-const SUPABASE_URL = 'https://nvpmbmpmxgwteoanzvne.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_X6tlCwh7m2i94p2CGFOcfg_wdTiTEqw';
-const vsConfigured = SUPABASE_URL.indexOf('INSERISCI') === -1 && SUPABASE_ANON_KEY.indexOf('INSERISCI') === -1;
+// 4) Project Settings > API: imposta URL e anon key in src/config.js o tramite backend/Netlify
+//    NON inserire mai chiavi segrete nel frontend. Il multiplayer resta disattivo finché non vengono configurate.
+const APP_CONFIG = window.COMBAT_SIMULATOR_CONFIG || {};
+const SUPABASE_URL = (APP_CONFIG.SUPABASE_URL || '').trim();
+const SUPABASE_ANON_KEY = (APP_CONFIG.SUPABASE_ANON_KEY || '').trim();
+const vsConfigured = Boolean(SUPABASE_URL) && Boolean(SUPABASE_ANON_KEY) && SUPABASE_URL.indexOf('INSERISCI') === -1 && SUPABASE_ANON_KEY.indexOf('INSERISCI') === -1;
 const supabaseClient = (vsConfigured && window.supabase)
   ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
   : null;
@@ -2946,7 +2952,7 @@ function afterVsMove(){
 
 async function startAsHost(){
   if (!vsConfigured) {
-    setConnStatus('Supabase non configurato: inserisci URL e chiave anon nel codice (commento sopra SUPABASE_URL).', false);
+    setConnStatus('Supabase non configurato: imposta URL e anon key in src/config.js o via backend/Netlify. Multiplayer disattivato finché non vengono configurati.', false);
     return;
   }
   stopPoll();
@@ -2972,7 +2978,7 @@ async function startAsHost(){
 
 async function joinAsGuest(){
   if (!vsConfigured) {
-    setConnStatus('Supabase non configurato: inserisci URL e chiave anon nel codice.', false);
+    setConnStatus('Supabase non configurato: imposta URL e anon key in src/config.js o via backend/Netlify. Multiplayer disattivato finché non vengono configurati.', false);
     return;
   }
   const input = document.getElementById('vsRoomInput');
@@ -3326,6 +3332,18 @@ updateFilterLabels();
 refreshAll();
 // guida draft: chiusa finché non tocchi un tab
 renderArchive();
+
+window.CombatSimulator = window.CombatSimulator || {};
+window.CombatSimulator.core = window.CombatSimulator.core || {};
+window.CombatSimulator.core.engine = window.CombatSimulator.core.engine || {};
+window.CombatSimulator.core.engine.simulateBattle = typeof window.simulateBattle === 'function'
+  ? window.simulateBattle
+  : function fallbackBattle() { return { winner: 'draw', log: [] }; };
+window.CombatSimulator.data = window.CombatSimulator.data || {};
+window.CombatSimulator.data.types = window.TYPE_CHART || {};
+window.CombatSimulator.data.tags = window.CHAR_TAGS || {};
+window.CombatSimulator.data.synergies = window.SYNERGIES || [];
+window.CombatSimulator.data.rivalries = window.RIVALRIES || [];
 </script>
 </body>
 </html>
