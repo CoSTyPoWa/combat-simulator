@@ -69,4 +69,5 @@
     markCampHeroesUsed: markCampHeroesUsed,
     clearCampUsed: clearCampUsed
   };
+  ns.modes.campaignHelpers = ns.modes.campaign;
 })();

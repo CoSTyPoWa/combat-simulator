@@ -3,27 +3,35 @@
   var ns = window.CombatSimulator;
   ns.ui = ns.ui || {};
 
-  ns.ui.selection = {
-    assignment: {},
-    currentUniverse: 'marvel',
-    currentFilter: 'all',
-    appMode: 'free',
-    activeCampMission: null,
-    getTeamIds: function getTeamIds(teamKey) {
-      var assignment = ns.ui.selection.assignment || {};
-      var ids = Object.keys(assignment).filter(function (id) { return assignment[id] === teamKey; });
-      return ids;
-    },
-    setAssignment: function setAssignment(id, team) {
-      var assignment = ns.ui.selection.assignment || {};
-      if (team) assignment[id] = team;
-      else delete assignment[id];
-      ns.ui.selection.assignment = assignment;
-      return assignment;
-    },
-    clearAssignment: function clearAssignment() {
-      ns.ui.selection.assignment = {};
-      return ns.ui.selection.assignment;
+  function ensureAssignment() {
+    if (typeof window.assignment === 'undefined') {
+      window.assignment = {};
     }
+    return window.assignment;
+  }
+
+  function setCharacterAssignment(characterId, team) {
+    var assignment = ensureAssignment();
+    if (!characterId) return assignment;
+    assignment[characterId] = team;
+    return assignment;
+  }
+
+  function clearAssignment() {
+    var assignment = ensureAssignment();
+    Object.keys(assignment).forEach(function (key) { delete assignment[key]; });
+    return assignment;
+  }
+
+  function getTeamIds(teamName) {
+    var assignment = ensureAssignment();
+    return Object.keys(assignment).filter(function (id) { return assignment[id] === teamName; });
+  }
+
+  ns.ui.selection = {
+    ensureAssignment: ensureAssignment,
+    setCharacterAssignment: setCharacterAssignment,
+    clearAssignment: clearAssignment,
+    getTeamIds: getTeamIds
   };
 })();

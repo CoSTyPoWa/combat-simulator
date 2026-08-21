@@ -4,29 +4,34 @@
   ns.core = ns.core || {};
   ns.core.combat = ns.core.combat || {};
 
-  function getRules() {
-    return window.CombatSimulator && window.CombatSimulator.rules ? window.CombatSimulator.rules : {};
+  function computeDamage(attacker, defender, opts) {
+    if (typeof window.computeDamage === 'function') {
+      return window.computeDamage(attacker, defender, opts);
+    }
+    if (
+      ns.core &&
+      typeof ns.core.computeDamage === 'function' &&
+      ns.core.computeDamage !== computeDamage
+    ) {
+      return ns.core.computeDamage(attacker, defender, opts);
+    }
+    if (!attacker || !defender || !attacker.stats || !defender.stats) return 0;
+
+    var a = attacker.stats || {};
+    var d = defender.stats || {};
+    var base = ((a.forza || 0) * 0.35 + (a.energia || 0) * 0.35 + (a.combattimento || 0) * 0.30) * 2.6;
+    var resist = (d.durabilita || 0) * 1.15 + (d.energia || 0) * 0.25 + (d.combattimento || 0) * 0.18;
+    var dmg = Math.max(Math.round(base - resist), 4);
+    var multiplier = (opts && typeof opts.multiplier === 'number') ? opts.multiplier : 1;
+
+    return Math.max(0, dmg * multiplier);
   }
 
-  function computeDamage(attacker, defender) {
-    if (typeof window.CombatSimulator !== 'undefined' && typeof window.CombatSimulator.rules !== 'undefined' && typeof window.CombatSimulator.rules.computeDamage === 'function') {
-      return window.CombatSimulator.rules.computeDamage(attacker, defender);
-    }
-    if (!attacker || !defender) return 0;
-    var s = attacker.stats || {};
-    var dmg = ((s.forza || 0) * 0.35 + (s.energia || 0) * 0.35 + (s.combattimento || 0) * 0.30) * (0.78 + Math.random() * 0.44) * 2.6;
-    var atkT = attacker.tierDmg || 1;
-    var defT = defender.tierDmg || 1;
-    var gap = atkT / Math.max(defT, 0.55);
-    dmg *= atkT * (0.65 + 0.35 * gap);
-    if (typeof window.typeMultiplier === 'function') {
-      dmg *= window.typeMultiplier(attacker.id, defender.id);
-    }
-    var resist = ((defender.stats && defender.stats.durabilita) || 0) * 1.15 + ((defender.tier === 'S' ? 5 : defender.tier === 'A' ? 4 : defender.tier === 'B' ? 3 : defender.tier === 'C' ? 2 : 1) * 1.2);
-    return Math.max(Math.round(dmg - resist), 4);
+  function applyDamage(amount) {
+    return Math.max(0, Number(amount) || 0);
   }
 
   ns.core.combat.computeDamage = computeDamage;
-  ns.core.damage = computeDamage;
-  window.computeDamage = computeDamage;
+  ns.core.computeDamage = computeDamage;
+  ns.core.damage = applyDamage;
 })();

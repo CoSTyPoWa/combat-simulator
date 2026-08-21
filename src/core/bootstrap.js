@@ -8,7 +8,7 @@
   ns.core = ns.core || {};
   ns.rules = ns.rules || {};
   ns.ui = ns.ui || {};
-  ns.multiplayer = ns.multiplayer || {};
+  ns.modes = ns.modes || {};
   ns.registry = ns.registry || {};
 
   ns.registry = {
@@ -22,24 +22,17 @@
   };
 
   ns.bootstrap = function bootstrap() {
-    var data = window.COMBAT_SIMULATOR_DATA || ns.data || {};
     ns.config = window.COMBAT_SIMULATOR_CONFIG || ns.config || {};
-    ns.data = data;
-    ns.registry.characters = data.characters || ns.registry.characters || [];
-    ns.registry.universes = data.universes || ns.registry.universes || {};
-    ns.registry.types = data.types || ns.registry.types || {};
-    ns.registry.tags = data.tags || ns.registry.tags || {};
-    ns.registry.synergies = data.synergies || ns.registry.synergies || [];
-    ns.registry.rivalries = data.rivalries || ns.registry.rivalries || [];
-    ns.registry.campaigns = data.campaigns || ns.registry.campaigns || {};
-
-    if (typeof window.hydrateLegacyGlobals === 'function') {
-      window.hydrateLegacyGlobals();
-    }
-    if (typeof window.refreshRuntime === 'function') {
-      window.refreshRuntime();
-    }
-
+    ns.data = window.CombatSimulator.data || ns.data || {};
+    ns.registry.characters = ns.data.characters || ns.registry.characters || [];
+    ns.registry.universes = ns.data.universes || ns.registry.universes || {};
+    ns.registry.types = ns.data.types || ns.registry.types || {};
+    ns.registry.tags = ns.data.tags || ns.registry.tags || {};
+    ns.registry.synergies = ns.data.synergies || ns.registry.synergies || [];
+    ns.registry.rivalries = ns.data.rivalries || ns.registry.rivalries || [];
+    ns.registry.campaigns = ns.data.campaigns || ns.registry.campaigns || {};
+    if (typeof window.hydrateLegacyGlobals === 'function') window.hydrateLegacyGlobals();
+    if (typeof window.refreshRuntime === 'function') window.refreshRuntime();
     ns.ready = true;
     return ns.config;
   };
