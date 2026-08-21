@@ -1,8 +1,19 @@
 (function () {
   window.CombatSimulator = window.CombatSimulator || {};
-  window.CombatSimulator.data = window.CombatSimulator.data || {};
-  window.CombatSimulator.data.types = window.TYPE_CHART || {};
-  window.CombatSimulator.data.tags = window.CHAR_TAGS || {};
-  window.CombatSimulator.data.synergies = window.SYNERGIES || [];
-  window.CombatSimulator.data.rivalries = window.RIVALRIES || [];
+  var ns = window.CombatSimulator;
+  ns.data = ns.data || {};
+
+  if (window.COMBAT_SIMULATOR_DATA) {
+    ns.data = Object.assign(ns.data, window.COMBAT_SIMULATOR_DATA);
+  }
+
+  ns.data.characters = ns.data.characters || [];
+  ns.data.universes = ns.data.universes || {};
+  ns.data.types = ns.data.types || {};
+  ns.data.tags = ns.data.tags || {};
+  ns.data.synergies = ns.data.synergies || [];
+  ns.data.rivalries = ns.data.rivalries || [];
+  ns.data.campaigns = ns.data.campaigns || {};
+
+  window.COMBAT_SIMULATOR_DATA = ns.data;
 })();

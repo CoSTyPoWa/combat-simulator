@@ -16,6 +16,8 @@ src/
 ├── config.js
 ├── main.js
 ├── core/
+│   ├── bootstrap.js
+│   ├── bridge.js
 │   ├── combat/
 │   └── rules/
 ├── data/
@@ -30,6 +32,13 @@ src/
 - nessuna API key deve essere lasciata nel frontend
 - i valori Supabase vanno configurati in `src/config.js` o in un backend/Netlify Function
 - il multiplayer resta disattivato finché la configurazione non è presente
+
+## Moduli attuali
+
+- `core/bootstrap.js`: inizializzazione del namespace `CombatSimulator`
+- `core/bridge.js`: wrapper per le funzioni globali del motore di gioco
+- `ui/appShell.js`: base di accesso agli elementi del DOM
+- `data/gameData.js`: registrazione dati di gioco sul namespace
 
 ## Avvio locale
 
