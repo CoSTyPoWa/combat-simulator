@@ -1,0 +1,10 @@
+{
+  "name": "combat-simulator",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Combat Simulator — refactor structure with no gameplay changes.",
+  "scripts": {
+    "start": "npx http-server . -p 8080",
+    "dev": "npx http-server . -p 8080"
+  }
+}

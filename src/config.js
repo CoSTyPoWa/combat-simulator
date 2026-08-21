@@ -1,0 +1,4 @@
+window.COMBAT_SIMULATOR_CONFIG = Object.assign({
+  SUPABASE_URL: '',
+  SUPABASE_ANON_KEY: ''
+}, window.COMBAT_SIMULATOR_CONFIG || {});
